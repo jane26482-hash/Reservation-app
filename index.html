@@ -116,6 +116,16 @@
     };
 
 
+    // 공식 명칭 변환 (견적서/공문에 표시되는 이름)
+    const getOfficialLocationName = (loc) => {
+        if(loc === '문학 주육상장') return '문학주경기장 육상장';
+        if(loc === '문학 주축구장') return '문학주경기장 축구장';
+        if(loc === '문학 보조육상장') return '문학보조경기장 육상장';
+        if(loc === '문학 보조축구장') return '문학보조경기장 축구장';
+        return loc;
+    };
+
+
     // --- HTML -> MS Office 변환 함수 ---
     const exportHTMLToDoc = (elementId, filename = '', type = 'word') => {
       const element = document.getElementById(elementId);
@@ -191,9 +201,7 @@
       const [formDateType, setFormDateType] = useState('개별');
       const [formDates, setFormDates] = useState([{ date: '', endDate: '', location: '문학 주육상장', area: '', time: '주간 (09:00~18:00)', days: 1 }]);
       
-      // 인원 수 상태 추가
       const [formHeadcount, setFormHeadcount] = useState('');
-      
       const [formPaymentDeadline, setFormPaymentDeadline] = useState('');
       const [formRecipient, setFormRecipient] = useState('');
       const [formRestoration, setFormRestoration] = useState(false);
@@ -244,7 +252,6 @@
         e.preventDefault();
         if (!formTitle || !formPaymentDeadline || !formRecipient) return alert('필수 항목을 모두 입력해주세요.');
         
-        // 경기장 대관일 경우 인원수 필수 검증
         if (formCategory === '경기장 대관' && !formHeadcount) {
           return alert('경기장 사용 인원을 필수로 입력해주세요.');
         }
@@ -266,7 +273,7 @@
           incomeResolution: false, 
           allComplete: false, 
           createdAt: Date.now(),
-          headcount: formCategory === '경기장 대관' ? formHeadcount : null // 인원수 추가
+          headcount: formCategory === '경기장 대관' ? formHeadcount : null
         };
 
 
@@ -288,7 +295,6 @@
       };
 
 
-      // 꾹 누르기 (Long Press)
       const startPress = (rental) => {
         pressTimer.current = setTimeout(() => {
           handleDelete(rental);
@@ -316,6 +322,7 @@
       };
 
 
+      // --- 자동 금액 계산 (기간/요일 분리 적용) ---
       const calculateFees = (rental) => {
         let items = [];
         let totalBaseFee = 0;
@@ -323,65 +330,109 @@
         let totalRestorationFee = 0;
 
 
-        rental.dates.forEach(d => {
-          let daysCount = 1;
-          let isWeekend = false;
-          if (d.date) {
-            const dateObj = new Date(d.date);
-            isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
-            if (rental.dateType === '기간' && d.endDate) {
-              daysCount = Math.max(1, Math.floor((new Date(d.endDate) - dateObj) / (1000 * 60 * 60 * 24)) + 1);
-            } else if (d.days && d.days > 1) daysCount = parseInt(d.days);
-          }
+        if (rental.category === '프로모션') {
+            rental.dates.forEach(d => {
+                let daysCount = 1;
+                if (rental.dateType === '기간' && d.endDate) {
+                    const start = new Date(d.date);
+                    const end = new Date(d.endDate);
+                    daysCount = Math.max(1, Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1);
+                } else if (d.days && d.days > 1) {
+                    daysCount = parseInt(d.days);
+                }
+                const area = parseFloat(d.area) || 0;
+                let baseRate = (d.location === '동문광장' ? 746032.11 : 758770.47) / 13351;
+                const currentBase = baseRate * area * daysCount;
+                const currentComm = PROMO_COMMERCIAL_FEE_PER_SQM * area * daysCount;
+                
+                totalBaseFee += currentBase;
+                totalCommercialFee += currentComm;
 
 
-          if (rental.category === '프로모션') {
-            const area = parseFloat(d.area) || 0;
-            let baseRate = (d.location === '동문광장' ? 746032.11 : 758770.47) / 13351;
-            const currentBase = baseRate * area * daysCount;
-            const currentComm = PROMO_COMMERCIAL_FEE_PER_SQM * area * daysCount;
-            totalBaseFee += currentBase;
-            totalCommercialFee += currentComm;
-
-
-            items.push({
-              name: `대관사용료<br/>(${d.location === '북문광장' ? '프론티어스퀘어' : d.location})`,
-              unitText: `1일, 1㎡<br/>${(Math.round(baseRate*10)/10).toFixed(1)}원`,
-              qtyText: `${daysCount}일, ${area}㎡`,
-              total: Math.round(currentBase), note: ''
+                items.push({
+                  name: `대관사용료<br/>(${d.location === '북문광장' ? '프론티어스퀘어' : d.location})`,
+                  unitText: `1일, 1㎡<br/>${(Math.round(baseRate*10)/10).toFixed(1)}원`,
+                  qtyText: `${daysCount}일, ${area}㎡`,
+                  total: Math.round(currentBase), note: ''
+                });
+                items.push({
+                  name: `상업사용료`, unitText: `1일, 1㎡<br/>1,400원`,
+                  qtyText: `${daysCount}일, ${area}㎡`, total: Math.round(currentComm), note: ''
+                });
             });
-            items.push({
-              name: `상업사용료`, unitText: `1일, 1㎡<br/>1,400원`,
-              qtyText: `${daysCount}일, ${area}㎡`, total: Math.round(currentComm), note: ''
+        } else {
+            // 경기장 대관: 평일과 주말을 정확하게 세어서 표를 분리
+            const agg = {};
+
+
+            rental.dates.forEach(d => {
+                const times = d.time === '종일 (06:00~23:00)' ? ['조기 (06:00~09:00)', '주간 (09:00~18:00)', '야간 (18:00~23:00)'] : [d.time];
+                let weekdayCount = 0;
+                let weekendCount = 0;
+
+
+                if (rental.dateType === '기간' && d.endDate) {
+                    const start = new Date(d.date);
+                    const end = new Date(d.endDate);
+                    const diffDays = Math.max(1, Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1);
+                    for(let i=0; i<diffDays; i++) {
+                        const cur = new Date(start.getTime() + i * 24*60*60*1000);
+                        const day = cur.getDay();
+                        if(day === 0 || day === 6) weekendCount++;
+                        else weekdayCount++;
+                    }
+                } else {
+                    const dateObj = new Date(d.date);
+                    const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
+                    if (isWeekend) weekendCount = parseInt(d.days) || 1;
+                    else weekdayCount = parseInt(d.days) || 1;
+                }
+
+
+                times.forEach(t => {
+                    const timeLabel = t.split(' ')[0]; // '조기', '주간', '야간'
+                    const pWeek = STADIUM_PRICES[d.location]?.[rental.purposeType]?.[t]?.[0];
+                    const pEnd = STADIUM_PRICES[d.location]?.[rental.purposeType]?.[t]?.[1];
+                    
+                    if (weekdayCount > 0 && pWeek) {
+                        const key = `${d.location}|${timeLabel}|weekday`;
+                        if (!agg[key]) agg[key] = { location: d.location, timeLabel, type: '평일', price: pWeek, count: 0 };
+                        agg[key].count += weekdayCount;
+                    }
+                    if (weekendCount > 0 && pEnd) {
+                        const key = `${d.location}|${timeLabel}|weekend`;
+                        if (!agg[key]) agg[key] = { location: d.location, timeLabel, type: '주말', price: pEnd, count: 0 };
+                        agg[key].count += weekendCount;
+                    }
+                });
             });
-          } else {
-            const times = d.time === '종일 (06:00~23:00)' ? ['조기 (06:00~09:00)', '주간 (09:00~18:00)', '야간 (18:00~23:00)'] : [d.time];
-            let dayFee = 0;
-            let unitTexts = [];
-            times.forEach(t => {
-              if(STADIUM_PRICES[d.location]?.[rental.purposeType]?.[t]) {
-                const p = isWeekend ? STADIUM_PRICES[d.location][rental.purposeType][t][1] : STADIUM_PRICES[d.location][rental.purposeType][t][0];
-                dayFee += p;
-                unitTexts.push(`${isWeekend?'주말':'평일'} ${t.split(' ')[0]}<br/>${formatCurrency(p)}원`);
-              }
+
+
+            // 계산된 평일/주말 내역을 견적서 리스트에 삽입
+            Object.values(agg).forEach(g => {
+                const totalItemFee = g.price * g.count;
+                totalBaseFee += totalItemFee;
+                items.push({
+                    name: `대관사용료<br/>(${getOfficialLocationName(g.location)})`,
+                    unitText: `${g.type} ${g.timeLabel}<br/>${formatCurrency(g.price)}원`,
+                    qtyText: `${g.count}일`,
+                    total: totalItemFee,
+                    note: ''
+                });
             });
-            const totalItemFee = dayFee * daysCount;
-            totalBaseFee += totalItemFee;
+        }
 
 
-            items.push({
-              name: `대관사용료<br/>(${d.location})`,
-              unitText: unitTexts.join('<br/>'), qtyText: `${daysCount}일`,
-              total: totalItemFee, note: ''
-            });
-          }
-        });
-
-
+        // 복구비 처리
         if (rental.restorationFee) {
-          let totalDays = rental.dateType === '기간' 
-            ? Math.max(1, Math.floor((new Date(rental.dates[0].endDate) - new Date(rental.dates[0].date)) / (1000 * 60 * 60 * 24)) + 1)
-            : rental.dates.reduce((acc, d) => acc + (parseInt(d.days) || 1), 0);
+          let totalDays = 0;
+          if (rental.dateType === '기간') {
+              const start = new Date(rental.dates[0].date);
+              const end = new Date(rental.dates[0].endDate);
+              totalDays = Math.max(1, Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1);
+          } else {
+              totalDays = rental.dates.reduce((acc, d) => acc + (parseInt(d.days) || 1), 0);
+          }
           const currentRest = RESTORATION_FEE_PER_DAY * totalDays;
           totalRestorationFee += currentRest;
           items.push({
@@ -389,6 +440,7 @@
             qtyText: `${totalDays}일`, total: currentRest, note: '행사 종료 후 반환'
           });
         }
+        
         return { items, totalBaseFee, totalCommercialFee, totalRestorationFee, grandTotal: Math.round(totalBaseFee + totalCommercialFee + totalRestorationFee) };
       };
 
@@ -401,10 +453,11 @@
       };
 
 
+      // --- MS Word 호환 렌더러 ---
       const renderWordTemplate = (r, fees) => {
         const isPromo = r.category === '프로모션';
         const dateStr = r.dates.map(d => r.dateType === '기간' ? `${d.date}~${d.endDate}` : d.date).join(', ');
-        const locStr = Array.from(new Set(r.dates.map(d => d.location))).join(', ');
+        const locStr = Array.from(new Set(r.dates.map(d => getOfficialLocationName(d.location)))).join(', ');
         const docNumber = Math.floor(Math.random() * 100) + 50;
 
 
@@ -497,9 +550,10 @@
                             <tr><td style={{ paddingBottom: '5px' }}>- 납부계좌 : 신한은행 100-029-560532 (예금주 : 주식회사 신세계야구단)</td></tr>
                           </React.Fragment>
                         ) : (
-                          r.dates.map((d, idx) => (
-                            <tr key={idx}><td style={{ paddingBottom: '5px' }}>- {r.dateType === '기간' ? `${d.date}~${d.endDate}` : d.date} / {d.location} ({d.time})</td></tr>
-                          ))
+                          r.dates.map((d, idx) => {
+                            const dateTxt = r.dateType === '기간' ? `${d.date}~${d.endDate}` : d.date;
+                            return <tr key={idx}><td style={{ paddingBottom: '5px' }}>- {dateTxt} / {getOfficialLocationName(d.location)} ({d.time})</td></tr>
+                          })
                         )}
                       </tbody>
                     </table>
@@ -553,6 +607,7 @@
       };
 
 
+      // --- MS Excel 호환 렌더러 ---
       const renderExcelTemplate = (r, fees) => {
         const isPromo = r.category === '프로모션';
         
@@ -853,18 +908,13 @@
                       </div>
 
 
-                      {/* 하단 입력 폼 (조건부 열 분할) */}
                       <div className={`md:col-span-2 border-t pt-6 grid grid-cols-1 gap-6 ${formCategory === '경기장 대관' ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
-                        
-                        {/* 사용 인원 폼 (경기장 대관 시에만 나타남) */}
                         {formCategory === '경기장 대관' && (
                           <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-1">사용 인원 (명)</label>
                             <input type="number" required min="1" placeholder="예: 30" className="w-full border-gray-300 border p-2 rounded-lg shadow-sm" value={formHeadcount} onChange={e => setFormHeadcount(e.target.value)} />
                           </div>
                         )}
-
-
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-1">수신자 명</label>
                           <input type="text" required placeholder="예: 런클리어, 스타벅스 등" className="w-full border-gray-300 border p-2 rounded-lg shadow-sm" value={formRecipient} onChange={e => setFormRecipient(e.target.value)} />
