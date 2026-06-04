@@ -59,27 +59,27 @@
     const Download = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>;
 
 
-    // --- 요금 산정 상수 ---
+    // --- 요금 산정 상수 (폼의 선택지 이름과 완전히 일치하도록 수정) ---
     const STADIUM_PRICES = {
       '문학 주육상장': {
-        '체육 외': { '조기 (06:00~09:00)': [150000, 225000], '주간 (09:00~18:00)': [300000, 450000], '야간 (18:00~23:00)': [450000, 675000] },
-        '체육': { '조기 (06:00~09:00)': [50000, 75000], '주간 (09:00~18:00)': [100000, 150000], '야간 (18:00~23:00)': [150000, 225000] }
+        '체육경기 외': { '조기 (06:00~09:00)': [150000, 225000], '주간 (09:00~18:00)': [300000, 450000], '야간 (18:00~23:00)': [450000, 675000] },
+        '체육경기': { '조기 (06:00~09:00)': [50000, 75000], '주간 (09:00~18:00)': [100000, 150000], '야간 (18:00~23:00)': [150000, 225000] }
       },
       '문학 보조육상장': {
-        '체육 외': { '조기 (06:00~09:00)': [150000, 225000], '주간 (09:00~18:00)': [300000, 450000], '야간 (18:00~23:00)': [450000, 675000] },
-        '체육': { '조기 (06:00~09:00)': [50000, 75000], '주간 (09:00~18:00)': [100000, 150000], '야간 (18:00~23:00)': [150000, 225000] }
+        '체육경기 외': { '조기 (06:00~09:00)': [150000, 225000], '주간 (09:00~18:00)': [300000, 450000], '야간 (18:00~23:00)': [450000, 675000] },
+        '체육경기': { '조기 (06:00~09:00)': [50000, 75000], '주간 (09:00~18:00)': [100000, 150000], '야간 (18:00~23:00)': [150000, 225000] }
       },
       '문학 주축구장': {
-        '체육 외': { '조기 (06:00~09:00)': [500000, 750000], '주간 (09:00~18:00)': [1000000, 1500000], '야간 (18:00~23:00)': [1500000, 2250000] },
-        '체육': { '조기 (06:00~09:00)': [250000, 375000], '주간 (09:00~18:00)': [500000, 750000], '야간 (18:00~23:00)': [750000, 1125000] }
+        '체육경기 외': { '조기 (06:00~09:00)': [500000, 750000], '주간 (09:00~18:00)': [1000000, 1500000], '야간 (18:00~23:00)': [1500000, 2250000] },
+        '체육경기': { '조기 (06:00~09:00)': [250000, 375000], '주간 (09:00~18:00)': [500000, 750000], '야간 (18:00~23:00)': [750000, 1125000] }
       },
       '문학 보조축구장': {
-        '체육 외': { '조기 (06:00~09:00)': [250000, 375000], '주간 (09:00~18:00)': [500000, 750000], '야간 (18:00~23:00)': [750000, 1125000] },
-        '체육': { '조기 (06:00~09:00)': [100000, 150000], '주간 (09:00~18:00)': [200000, 300000], '야간 (18:00~23:00)': [300000, 450000] }
+        '체육경기 외': { '조기 (06:00~09:00)': [250000, 375000], '주간 (09:00~18:00)': [500000, 750000], '야간 (18:00~23:00)': [750000, 1125000] },
+        '체육경기': { '조기 (06:00~09:00)': [100000, 150000], '주간 (09:00~18:00)': [200000, 300000], '야간 (18:00~23:00)': [300000, 450000] }
       },
       '문학 야구장': {
-        '체육 외': { '조기 (06:00~09:00)': [100000, 150000], '주간 (09:00~18:00)': [200000, 300000], '야간 (18:00~23:00)': [300000, 450000] },
-        '체육': { '조기 (06:00~09:00)': [50000, 75000], '주간 (09:00~18:00)': [100000, 150000], '야간 (18:00~23:00)': [150000, 225000] }
+        '체육경기 외': { '조기 (06:00~09:00)': [100000, 150000], '주간 (09:00~18:00)': [200000, 300000], '야간 (18:00~23:00)': [300000, 450000] },
+        '체육경기': { '조기 (06:00~09:00)': [50000, 75000], '주간 (09:00~18:00)': [100000, 150000], '야간 (18:00~23:00)': [150000, 225000] }
       }
     };
 
@@ -165,7 +165,7 @@
         <style>
           body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; color: #000; }
           table { border-collapse: collapse; }
-          br { mso-data-placement: same-cell; }
+          br { mso-data-placement: same-cell; } /* 엑셀에서 줄바꿈이 같은 셀 안에 표시되게 하는 핵심 코드 */
         </style>
       </head>
       <body>`;
@@ -199,7 +199,7 @@
       const [formTitle, setFormTitle] = useState('');
       const [formPurposeType, setFormPurposeType] = useState('체육경기 외');
       const [formDateType, setFormDateType] = useState('개별');
-      const [formDates, setFormDates] = useState([{ date: '', endDate: '', location: '문학 주육상장', area: '', time: '주간 (09:00~18:00)', days: 1 }]);
+      const [formDates, setFormDates] = useState([{ date: '', endDate: '', location: '문학 주육상장', area: '', time: '조기 (06:00~09:00)', days: 1 }]);
       
       const [formHeadcount, setFormHeadcount] = useState('');
       const [formPaymentDeadline, setFormPaymentDeadline] = useState('');
@@ -210,7 +210,6 @@
       const pressTimer = useRef(null);
 
 
-      // --- Firebase 연동 ---
       useEffect(() => {
         firebase.auth().signInAnonymously().catch(err => console.log("Auth Optional:", err.message));
         
@@ -222,7 +221,6 @@
           },
           (err) => {
             console.error("Firestore 읽기 오류:", err);
-            alert("데이터베이스 접근 권한 오류가 발생했습니다. (Firebase Rules를 확인하세요)");
           }
         );
         return () => unsubscribe();
@@ -230,7 +228,7 @@
 
 
       const addDateRow = () => {
-        if (formDates.length < 10) setFormDates([...formDates, { date: '', endDate: '', location: '문학 주육상장', area: '', time: '주간 (09:00~18:00)', days: 1 }]);
+        if (formDates.length < 10) setFormDates([...formDates, { date: '', endDate: '', location: '문학 주육상장', area: '', time: '조기 (06:00~09:00)', days: 1 }]);
         else alert('개별 날짜는 최대 10개까지 추가할 수 있습니다.');
       };
 
@@ -247,7 +245,6 @@
       };
 
 
-      // 일정 등록
       const handleRegister = (e) => {
         e.preventDefault();
         if (!formTitle || !formPaymentDeadline || !formRecipient) return alert('필수 항목을 모두 입력해주세요.');
@@ -280,12 +277,11 @@
         db.collection('rentals').add(newRental).then(() => {
           alert('대관 일정이 등록되었습니다.');
           setFormTitle(''); setFormPaymentDeadline(''); setFormRecipient(''); setFormRestoration(false); setFormHeadcount('');
-          setFormDates([{ date: '', endDate: '', location: '문학 주육상장', area: '', time: '주간 (09:00~18:00)', days: 1 }]);
+          setFormDates([{ date: '', endDate: '', location: '문학 주육상장', area: '', time: '조기 (06:00~09:00)', days: 1 }]);
         }).catch(err => alert("등록 중 오류가 발생했습니다: " + err.message));
       };
 
 
-      // 일정 삭제
       const handleDelete = (rental) => {
         if (window.confirm(`'${rental.title}' 대관 일정을 정말 삭제하시겠습니까?\n삭제 시 전체 목록에서도 완전히 사라집니다.`)) {
           db.collection('rentals').doc(rental.id).delete()
@@ -296,17 +292,12 @@
 
 
       const startPress = (rental) => {
-        pressTimer.current = setTimeout(() => {
-          handleDelete(rental);
-        }, 800);
+        pressTimer.current = setTimeout(() => { handleDelete(rental); }, 800);
       };
 
 
       const cancelPress = () => {
-        if (pressTimer.current) {
-          clearTimeout(pressTimer.current);
-          pressTimer.current = null;
-        }
+        if (pressTimer.current) { clearTimeout(pressTimer.current); pressTimer.current = null; }
       };
 
 
@@ -322,7 +313,7 @@
       };
 
 
-      // --- 자동 금액 계산 (기간/요일 분리 적용) ---
+      // --- 가장 중요한 단가 계산 및 표 데이터 추출 로직 ---
       const calculateFees = (rental) => {
         let items = [];
         let totalBaseFee = 0;
@@ -361,7 +352,7 @@
                 });
             });
         } else {
-            // 경기장 대관: 평일과 주말을 정확하게 세어서 표를 분리
+            // 경기장 대관 처리
             const agg = {};
 
 
@@ -408,7 +399,7 @@
             });
 
 
-            // 계산된 평일/주말 내역을 견적서 리스트에 삽입
+            // 추출된 항목을 표 데이터로 삽입 (단가에 주중/주말 및 시간대 기록)
             Object.values(agg).forEach(g => {
                 const totalItemFee = g.price * g.count;
                 totalBaseFee += totalItemFee;
@@ -423,7 +414,6 @@
         }
 
 
-        // 복구비 처리
         if (rental.restorationFee) {
           let totalDays = 0;
           if (rental.dateType === '기간') {
@@ -453,7 +443,7 @@
       };
 
 
-      // --- MS Word 호환 렌더러 ---
+      // --- 공문 (Word) 렌더러 ---
       const renderWordTemplate = (r, fees) => {
         const isPromo = r.category === '프로모션';
         const dateStr = r.dates.map(d => r.dateType === '기간' ? `${d.date}~${d.endDate}` : d.date).join(', ');
@@ -607,7 +597,7 @@
       };
 
 
-      // --- MS Excel 호환 렌더러 ---
+      // --- 견적서 (Excel) 렌더러 ---
       const renderExcelTemplate = (r, fees) => {
         const isPromo = r.category === '프로모션';
         
@@ -653,6 +643,7 @@
                 </tr>
                 <tr><td colSpan="7" style={{ height: '20px' }}></td></tr>
                 
+                {/* 상단 합계 부분 */}
                 <tr>
                   <td colSpan="2" style={{ border: '1px solid black', padding: '8px', fontWeight: 'bold' }}>합 계(VAT 포함)</td>
                   <td colSpan="3" style={{ border: '1px solid black', padding: '8px', textAlign: 'center', fontWeight: 'bold' }}>
@@ -672,6 +663,7 @@
                   <th style={{ border: '1px solid black', padding: '8px', width: '15%' }}>비 고</th>
                 </tr>
                 
+                {/* 계산된 데이터 출력 부분 */}
                 {fees.items.map((item, idx) => (
                   <tr key={idx}>
                     <td colSpan="2" style={{ border: '1px solid black', padding: '10px' }} dangerouslySetInnerHTML={{ __html: item.name }} />
@@ -682,6 +674,7 @@
                   </tr>
                 ))}
                 
+                {/* 하단 전체 합계 부분 */}
                 <tr>
                   <th colSpan="4" style={{ border: '1px solid black', padding: '10px' }}>합 계</th>
                   <td colSpan="2" style={{ border: '1px solid black', padding: '10px', textAlign: 'right', fontWeight: 'bold', msoNumberFormat: '\\#\\,\\#\\#0' }}>{fees.grandTotal}</td>
