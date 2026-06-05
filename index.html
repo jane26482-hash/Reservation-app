@@ -146,9 +146,9 @@
               img.src = getBase64Image(originalImg); 
               
               // 워드에서 이미지가 원본 해상도(매우 큼)로 출력되는 문제 방지
-              // 표시되는 크기만 눈금선 7칸 크기(약 125px)로 강제 지정
+              // 표시되는 크기만 90px 로 강제 지정
               if (img.id === 'ssg-logo') {
-                const targetHeight = 125; 
+                const targetHeight = 40; 
                 const ratio = (originalImg.naturalWidth || 150) / (originalImg.naturalHeight || 90);
                 img.setAttribute('height', targetHeight);
                 img.setAttribute('width', Math.round(targetHeight * ratio));
@@ -474,7 +474,7 @@
                 <tr>
                   <td align="center" style={{ padding: 0 }}>
                     <p style={{ margin: 0, padding: 0, textAlign: 'center' }}>
-                      <img id="ssg-logo" src="./wordmark_02.jpg" alt="SSG LANDERS" crossOrigin="anonymous" style={{ height: '125px', objectFit: 'contain' }} />
+                      <img id="ssg-logo" src="./wordmark_02.jpg" alt="SSG LANDERS" crossOrigin="anonymous" style={{ height: '40px', objectFit: 'contain' }} />
                     </p>
                   </td>
                 </tr>
@@ -554,61 +554,61 @@
               </p>
 
               <div style={{ paddingLeft: '15px' }}>
-                {/* 가/나/다 앞 스페이스바 2번 */}
+                {/* 가/나/다 앞 스페이스바 4번 */}
                 <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
-                  &nbsp;&nbsp;가. {isPromo ? '대관 허가 개요' : `사용목적 : ${r.title.trim()}`}
+                  &nbsp;&nbsp;&nbsp;&nbsp;가. {isPromo ? '대관 허가 개요' : `사용목적 : ${r.title.trim()}`}
                 </p>
                 {isPromo && (
                   <div style={{ paddingLeft: '20px' }}>
-                    {/* - 앞 스페이스바 3번 */}
-                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;- 사용목적 : 프로모션({r.title.trim()})</p>
-                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;- 허가기간 : {dateStr}</p>
-                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;- 허가장소 : {locStr}</p>
+                    {/* - 앞 스페이스바 5번 */}
+                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 사용목적 : 프로모션({r.title.trim()})</p>
+                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 허가기간 : {dateStr}</p>
+                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 허가장소 : {locStr}</p>
                   </div>
                 )}
 
                 <p style={{ margin: 0, padding: 0, paddingTop: '5px', fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
-                  &nbsp;&nbsp;나. {isPromo ? '대관료 납부 안내' : '허가기간 및 허가장소'}
+                  &nbsp;&nbsp;&nbsp;&nbsp;나. {isPromo ? '대관료 납부 안내' : '허가기간 및 허가장소'}
                 </p>
                 <div style={{ paddingLeft: '20px' }}>
                   {isPromo ? (
                     <React.Fragment>
-                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;- 대관료 : {formatCurrency(fees.grandTotal)}원 (부가세 포함)</p>
-                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;- 납부기한 : {r.paymentDeadline} 17시</p>
-                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;- 납부계좌 : 신한은행 100-029-560532 (예금주 : 주식회사 신세계야구단)</p>
+                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 대관료 : {formatCurrency(fees.grandTotal)}원 (부가세 포함)</p>
+                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 납부기한 : {r.paymentDeadline} 17시</p>
+                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 납부계좌 : 신한은행 100-029-560532 (예금주 : 주식회사 신세계야구단)</p>
                     </React.Fragment>
                   ) : (
                     r.dates.map((d, idx) => {
                       const dateTxt = r.dateType === '기간' ? `${d.date}~${d.endDate}` : d.date;
-                      return <p key={idx} style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;- {dateTxt} / {getOfficialLocationName(d.location)} ({d.time})</p>
+                      return <p key={idx} style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- {dateTxt} / {getOfficialLocationName(d.location)} ({d.time})</p>
                     })
                   )}
                 </div>
 
                 <p style={{ margin: 0, padding: 0, paddingTop: '5px', fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
-                  &nbsp;&nbsp;다. {isPromo ? '대관 허가 조건' : '대관 조건'}
+                  &nbsp;&nbsp;&nbsp;&nbsp;다. {isPromo ? '대관 허가 조건' : '대관 조건'}
                 </p>
                 <div style={{ paddingLeft: '20px' }}>
                   {!isPromo && (
                     <React.Fragment>
-                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;- 대관료 기한 내 납부 : {formatCurrency(fees.grandTotal)}원</p>
-                      <p style={{ margin: 0, padding: 0, fontSize: '8pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*기한 : {r.paymentDeadline} 17시 / 계좌 : 신한 100-029-560532 ㈜신세계야구단</p>
+                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 대관료 기한 내 납부 : {formatCurrency(fees.grandTotal)}원</p>
+                      <p style={{ margin: 0, padding: 0, fontSize: '8pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*기한 : {r.paymentDeadline} 17시 / 계좌 : 신한 100-029-560532 ㈜신세계야구단</p>
                     </React.Fragment>
                   )}
-                  {isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;- 대관료 기한 내 납부</p>}
-                  <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;- {isPromo ? '근무자 및 참가자에 대한 안전관리' : '안전관리 : ①관계자/참가자 안전 확보 ②보험 가입'}</p>
-                  {!isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;- 시설보존 : ①시설 원형 보존 ②사후 청소 ③시설 훼손 시 원상복구 이행</p>}
-                  {isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;- (필요 시) 인허가 절차 및 관련 법령 준수</p>}
+                  {isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 대관료 기한 내 납부</p>}
+                  <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- {isPromo ? '근무자 및 참가자에 대한 안전관리' : '안전관리 : ①관계자/참가자 안전 확보 ②보험 가입'}</p>
+                  {!isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 시설보존 : ①시설 원형 보존 ②사후 청소 ③시설 훼손 시 원상복구 이행</p>}
+                  {isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- (필요 시) 인허가 절차 및 관련 법령 준수</p>}
                 </div>
               </div>
 
-              {/* 첨부 앞 스페이스바 2번 */}
+              {/* 첨부 앞 스페이스바 4번 */}
               <div style={{ marginLeft: '15px', marginTop: '15px' }}>
-                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;첨부</p>
-                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;1. 문학경기장 대관 사용 견적서</p>
-                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;2. 문학경기장 대관 허가조건 및 유의사항</p>
-                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;3. 사업자등록증(주식회사 신세계야구단)</p>
-                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;4. 통장 사본(주식회사 신세계야구단). “끝”</p>
+                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;첨부</p>
+                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;1. 문학경기장 대관 사용 견적서</p>
+                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;2. 문학경기장 대관 허가조건 및 유의사항</p>
+                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;3. 사업자등록증(주식회사 신세계야구단)</p>
+                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;4. 통장 사본(주식회사 신세계야구단). “끝”</p>
               </div>
 
               <div style={{ marginTop: '40px', textAlign: 'center' }}>
