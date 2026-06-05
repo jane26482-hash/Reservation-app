@@ -452,11 +452,11 @@
         return (
           <div id="export-area" style={{ width: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif", color: 'black' }}>
             
-            {/* 1. 상단 로고 (높이 90px 지정) 및 얇은 검은색 하단 선이 적용된 주소 */}
+            {/* 1. 상단 로고 (하단 검은색 굵은선 삭제 완료) */}
             <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ borderCollapse: 'collapse', border: 'none' }}>
               <tbody>
                 <tr>
-                  <td align="center" style={{ padding: 0, borderBottom: '2px solid black' }}>
+                  <td align="center" style={{ padding: 0 }}>
                     <p style={{ margin: 0, padding: 0, textAlign: 'center' }}>
                       <img id="ssg-logo" src="./wordmark_02.jpg" alt="SSG LANDERS" crossOrigin="anonymous" style={{ height: '90px' }} />
                     </p>
@@ -613,88 +613,101 @@
       };
 
 
-      // --- 견적서 (Excel) 렌더러 ---
+      // --- 견적서 (Excel) 렌더러 (개편된 양식 유지) ---
       const renderExcelTemplate = (r, fees) => {
         const isPromo = r.category === '프로모션';
         
         return (
           <div id="export-area" style={{ fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif", fontSize: '10pt', color: 'black' }}>
             <table border="0" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center' }}>
+              {/* 테이블 컬럼 레이아웃 100% 분배 */}
+              <colgroup>
+                <col width="12%"/>
+                <col width="12%"/>
+                <col width="6%"/>
+                <col width="10%"/>
+                <col width="5%"/>
+                <col width="15%"/>
+                <col width="20%"/>
+                <col width="20%"/>
+              </colgroup>
               <tbody>
                 <tr>
-                  <td colSpan="2" style={{ textAlign: 'left', verticalAlign: 'middle', border: 'none' }}>
-                    <img id="ssg-excel-logo" src="./wordmark_02.jpg" alt="SSG LANDERS" crossOrigin="anonymous" style={{ height: '40px', objectFit: 'contain' }} />
+                  <td colSpan="3" style={{ textAlign: 'left', verticalAlign: 'middle', border: 'none' }}>
+                    <img id="ssg-excel-logo" src="./wordmark_02.jpg" alt="SSG LANDERS" crossOrigin="anonymous" style={{ height: '35px', objectFit: 'contain' }} />
                   </td>
-                  <td colSpan="5" style={{ fontSize: '24pt', fontWeight: 'bold', padding: '15px 0', letterSpacing: '5px', verticalAlign: 'middle', border: 'none' }}>
+                  <td colSpan="5" style={{ fontSize: '24pt', fontWeight: 'bold', padding: '15px 0', letterSpacing: '10px', verticalAlign: 'middle', borderBottom: '2px solid black', textAlign: 'left', paddingLeft: '20px' }}>
                     문학경기장 대관 사용견적서
                   </td>
                 </tr>
-                <tr><td colSpan="7" style={{ height: '20px', border: 'none' }}></td></tr>
+                <tr><td colSpan="8" style={{ height: '20px' }}></td></tr>
                 
+                {/* 상단 정보 영역 */}
                 <tr>
-                  <td style={{ borderTop: '2px solid black', textAlign: 'left', width: '12%', padding: '5px' }}>발행일</td>
-                  <td colSpan="2" style={{ borderTop: '2px solid black', textAlign: 'left', padding: '5px' }}>{getTodayFormatted('excel')}</td>
-                  <td style={{ borderTop: '2px solid black', width: '10%' }}></td>
-                  <td style={{ borderTop: '2px solid black', textAlign: 'left', width: '15%', padding: '5px' }}>사업자등록번호</td>
-                  <td colSpan="2" style={{ borderTop: '2px solid black', textAlign: 'left', padding: '5px' }}>131-81-54702</td>
+                  <td style={{ textAlign: 'left', fontWeight: 'bold', padding: '5px' }}>수 신 :</td>
+                  <td colSpan="2" style={{ textAlign: 'left', padding: '5px', fontSize: '11pt', fontWeight: 'bold' }}>{r.recipient} <span style={{fontWeight:'normal'}}>귀하</span></td>
+                  <td></td>
+                  <td rowSpan="4" style={{ border: '2px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', textAlign: 'center', verticalAlign: 'middle' }}>공<br/><br/>급<br/><br/>자</td>
+                  <td style={{ borderTop: '2px solid black', borderBottom: '1px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '5px' }}>등록번호</td>
+                  <td colSpan="2" style={{ borderTop: '2px solid black', borderBottom: '1px solid black', borderRight: '2px solid black', padding: '5px' }}>131-81-54702</td>
                 </tr>
                 <tr>
-                  <td style={{ borderBottom: '2px solid black', textAlign: 'left', padding: '5px' }}>수령인</td>
-                  <td style={{ borderBottom: '2px solid black', textAlign: 'left', padding: '5px' }}>{r.recipient}</td>
-                  <td style={{ borderBottom: '2px solid black', textAlign: 'left', padding: '5px' }}>귀하</td>
-                  <td style={{ border: 'none' }}></td>
-                  <td style={{ border: 'none', textAlign: 'left', padding: '5px' }}>상 호</td>
-                  <td style={{ border: 'none', textAlign: 'left', padding: '5px' }}>㈜신세계야구단</td>
-                  <td style={{ border: 'none', textAlign: 'left', padding: '5px' }}>대표이사 김재섭</td>
+                  <td style={{ textAlign: 'left', fontWeight: 'bold', padding: '5px' }}>발 행 일 :</td>
+                  <td colSpan="2" style={{ textAlign: 'left', padding: '5px' }}>{getTodayFormatted('excel')}</td>
+                  <td></td>
+                  <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '5px' }}>상 호</td>
+                  <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '5px' }}>㈜신세계야구단</td>
+                  <td style={{ borderBottom: '1px solid black', borderRight: '2px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '5px' }}>대표이사 김재섭</td>
                 </tr>
                 <tr>
-                  <td colSpan="3" style={{ border: 'none' }}></td>
-                  <td style={{ border: 'none' }}></td>
-                  <td style={{ border: 'none', textAlign: 'left', padding: '5px' }}>사업장 소재지</td>
-                  <td colSpan="2" style={{ border: 'none', textAlign: 'left', padding: '5px' }}>인천광역시 미추홀구 매소홀로 618</td>
+                  <td colSpan="4"></td>
+                  <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '5px' }}>사업장주소</td>
+                  <td colSpan="2" style={{ borderBottom: '1px solid black', borderRight: '2px solid black', padding: '5px' }}>인천광역시 미추홀구 매소홀로 618</td>
                 </tr>
                 <tr>
-                  <td colSpan="3" style={{ border: 'none' }}></td>
-                  <td style={{ border: 'none' }}></td>
-                  <td style={{ borderBottom: '2px solid black', textAlign: 'left', padding: '5px' }}>전 화</td>
-                  <td style={{ borderBottom: '2px solid black', textAlign: 'left', padding: '5px' }}>032)455-2620</td>
-                  <td style={{ borderBottom: '2px solid black', textAlign: 'left', padding: '5px' }}>팩 스 032)455-2699</td>
+                  <td colSpan="4"></td>
+                  <td style={{ borderBottom: '2px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '5px' }}>전 화</td>
+                  <td style={{ borderBottom: '2px solid black', borderRight: '1px solid black', padding: '5px' }}>032)455-2620</td>
+                  <td style={{ borderBottom: '2px solid black', borderRight: '2px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '5px' }}>팩스 032)455-2699</td>
                 </tr>
-                <tr><td colSpan="7" style={{ height: '20px', border: 'none' }}></td></tr>
+                <tr><td colSpan="8" style={{ height: '20px' }}></td></tr>
                 
+                {/* 합계(VAT 포함) 행 */}
                 <tr>
-                  <td colSpan="2" style={{ border: '2px solid black', padding: '10px', fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>합 계(VAT 포함)</td>
-                  <td colSpan="3" style={{ border: '2px solid black', padding: '10px', textAlign: 'center', fontWeight: 'bold', fontSize: '14pt' }}>
+                  <td colSpan="2" style={{ border: '2px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '10px', fontSize: '12pt' }}>합 계 (VAT 포함)</td>
+                  <td colSpan="6" style={{ border: '2px solid black', textAlign: 'center', fontWeight: 'bold', fontSize: '14pt', padding: '10px' }}>
                     일금 {numberToKorean(fees.grandTotal)}원 정 (₩{formatCurrency(fees.grandTotal)})
                   </td>
-                  <td colSpan="2" style={{ border: '2px solid black', padding: '10px', textAlign: 'right', fontWeight: 'bold', fontSize: '14pt', msoNumberFormat: '\\#\\,\\#\\#0' }}>
-                    {fees.grandTotal}
-                  </td>
                 </tr>
-                <tr><td colSpan="7" style={{ height: '20px', border: 'none' }}></td></tr>
-                
-                <tr style={{ background: '#f5f5f5' }}>
+                <tr><td colSpan="8" style={{ height: '10px' }}></td></tr>
+
+
+                {/* 내역 표 헤더 */}
+                <tr style={{ backgroundColor: '#f2f2f2' }}>
                   <th colSpan="2" style={{ border: '2px solid black', padding: '10px' }}>항 목</th>
-                  <th style={{ border: '2px solid black', padding: '10px', width: '20%' }}>단가</th>
-                  <th style={{ border: '2px solid black', padding: '10px', width: '20%' }}>수량</th>
-                  <th colSpan="2" style={{ border: '2px solid black', padding: '10px', width: '20%' }}>총 액</th>
-                  <th style={{ border: '2px solid black', padding: '10px', width: '15%' }}>비 고</th>
+                  <th colSpan="2" style={{ border: '2px solid black', padding: '10px' }}>단 가</th>
+                  <th colSpan="1" style={{ border: '2px solid black', padding: '10px' }}>수 량</th>
+                  <th colSpan="2" style={{ border: '2px solid black', padding: '10px' }}>총 액</th>
+                  <th colSpan="1" style={{ border: '2px solid black', padding: '10px' }}>비 고</th>
                 </tr>
-                
+
+
+                {/* 내역 데이터 표기 */}
                 {fees.items.map((item, idx) => (
                   <tr key={idx}>
-                    <td colSpan="2" style={{ border: '1px solid black', borderLeft: '2px solid black', borderRight: '2px solid black', padding: '10px' }} dangerouslySetInnerHTML={{ __html: item.name }} />
-                    <td style={{ border: '1px solid black', borderRight: '2px solid black', padding: '10px' }} dangerouslySetInnerHTML={{ __html: item.unitText }} />
-                    <td style={{ border: '1px solid black', borderRight: '2px solid black', padding: '10px' }}>{item.qtyText}</td>
-                    <td colSpan="2" style={{ border: '1px solid black', borderRight: '2px solid black', padding: '10px', textAlign: 'right', msoNumberFormat: '\\#\\,\\#\\#0' }}>{item.total}</td>
-                    <td style={{ border: '1px solid black', borderRight: '2px solid black', padding: '10px' }}>{item.note}</td>
+                    <td colSpan="2" style={{ border: '1px solid black', borderLeft: '2px solid black', borderRight: '1px solid black', padding: '10px' }} dangerouslySetInnerHTML={{ __html: item.name }} />
+                    <td colSpan="2" style={{ border: '1px solid black', padding: '10px' }} dangerouslySetInnerHTML={{ __html: item.unitText }} />
+                    <td colSpan="1" style={{ border: '1px solid black', padding: '10px' }}>{item.qtyText}</td>
+                    <td colSpan="2" style={{ border: '1px solid black', padding: '10px', textAlign: 'right', msoNumberFormat: '\\#\\,\\#\\#0' }}>{item.total}</td>
+                    <td colSpan="1" style={{ border: '1px solid black', borderRight: '2px solid black', padding: '10px' }}>{item.note}</td>
                   </tr>
                 ))}
                 
+                {/* 하단 총계 */}
                 <tr>
-                  <th colSpan="4" style={{ border: '2px solid black', padding: '10px', textAlign: 'center' }}>합 계</th>
-                  <td colSpan="2" style={{ border: '2px solid black', padding: '10px', textAlign: 'right', fontWeight: 'bold', msoNumberFormat: '\\#\\,\\#\\#0' }}>{fees.grandTotal}</td>
-                  <td style={{ border: '2px solid black', padding: '10px' }}></td>
+                  <th colSpan="5" style={{ border: '2px solid black', backgroundColor: '#f2f2f2', padding: '10px' }}>총 계</th>
+                  <td colSpan="2" style={{ border: '2px solid black', textAlign: 'right', fontWeight: 'bold', padding: '10px', msoNumberFormat: '\\#\\,\\#\\#0' }}>{fees.grandTotal}</td>
+                  <td colSpan="1" style={{ border: '2px solid black', backgroundColor: '#f2f2f2', padding: '10px' }}></td>
                 </tr>
               </tbody>
             </table>
