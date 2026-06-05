@@ -133,8 +133,8 @@
 
       const getBase64Image = (img) => {
         const canvas = document.createElement("canvas");
-        canvas.width = img.width || img.naturalWidth || 100;
-        canvas.height = img.height || img.naturalHeight || 50;
+        canvas.width = img.width || img.naturalWidth || 150;
+        canvas.height = img.height || img.naturalHeight || 90;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         return canvas.toDataURL("image/jpeg");
@@ -157,7 +157,7 @@
       const mime = type === 'word' ? 'application/msword' : 'application/vnd.ms-excel';
       const officeType = type === 'word' ? 'word' : 'excel';
       
-      // 줄간격 배수 및 여백 제거 강제 적용
+      // 줄간격 배수 유지를 위한 style (mso-line-height-rule 적용)
       const preHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:${officeType}' xmlns='http://www.w3.org/TR/REC-html40'>
       <head>
         <meta charset='utf-8'>
@@ -314,7 +314,6 @@
       };
 
 
-      // --- 단가 계산 로직 ---
       const calculateFees = (rental) => {
         let items = [];
         let totalBaseFee = 0;
@@ -381,7 +380,7 @@
 
 
                 times.forEach(t => {
-                    const timeLabel = t.split(' ')[0]; // '조기', '주간', '야간'
+                    const timeLabel = t.split(' ')[0];
                     const pWeek = STADIUM_PRICES[d.location]?.[rental.purposeType]?.[t]?.[0];
                     const pEnd = STADIUM_PRICES[d.location]?.[rental.purposeType]?.[t]?.[1];
                     
@@ -454,151 +453,160 @@
           <div id="export-area" style={{ width: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif", color: 'black' }}>
             
             {/* 1. 상단 로고 (높이 90px 지정) 및 얇은 검은색 하단 선이 적용된 주소 */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none' }}>
+            <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ borderCollapse: 'collapse', border: 'none' }}>
               <tbody>
                 <tr>
                   <td align="center" style={{ padding: 0, borderBottom: '2px solid black' }}>
-                    <img id="ssg-logo" src="./wordmark_02.jpg" alt="SSG LANDERS" crossOrigin="anonymous" style={{ height: '90px', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+                    <p style={{ margin: 0, padding: 0, textAlign: 'center' }}>
+                      <img id="ssg-logo" src="./wordmark_02.jpg" alt="SSG LANDERS" crossOrigin="anonymous" style={{ height: '90px' }} />
+                    </p>
                   </td>
                 </tr>
                 <tr>
-                  <td align="center" style={{ padding: '2px 0 10px 0', borderBottom: '1px solid black', fontSize: '9pt', color: '#555', msoLineHeightRule: 'exactly', lineHeight: '100%' }}>
-                    우22234/인천광역시 미추홀구 매소홀로 618/시설안전관리팀/김효원/T 032-455-2620/F 032-455-2699
+                  <td align="center" style={{ padding: '2px 0 10px 0', borderBottom: '1px solid black' }}>
+                    <p style={{ margin: 0, padding: 0, textAlign: 'center', fontSize: '9pt', color: '#555', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
+                      우22234/인천광역시 미추홀구 매소홀로 618/시설안전관리팀/김효원/T 032-455-2620/F 032-455-2699
+                    </p>
                   </td>
                 </tr>
               </tbody>
             </table>
 
 
-            {/* 2. 문서번호, 날짜 (12pt, 굵기 해제, 공백 제거) */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none', fontSize: '12pt', marginTop: '15px' }}>
+            {/* 2. 문서번호, 날짜 (12pt, 굵기 해제, 단락 전후 공백 제거) */}
+            <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ borderCollapse: 'collapse', border: 'none', marginTop: '15px' }}>
               <tbody>
                 <tr>
-                  <td style={{ width: '50%', padding: 0, fontWeight: 'normal', msoLineHeightRule: 'exactly', lineHeight: '100%' }}>SSG랜더스 – 문학{String(docNumber).padStart(3, '0')}호</td>
-                  <td style={{ width: '50%', textAlign: 'right', padding: 0, fontWeight: 'normal', msoLineHeightRule: 'exactly', lineHeight: '100%' }}>{getTodayFormatted()}</td>
+                  <td width="50%" align="left" style={{ padding: 0 }}>
+                    <p style={{ margin: 0, padding: 0, fontSize: '12pt', fontWeight: 'normal', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>SSG랜더스 – 문학{String(docNumber).padStart(3, '0')}호</p>
+                  </td>
+                  <td width="50%" align="right" style={{ padding: 0 }}>
+                    <p style={{ margin: 0, padding: 0, fontSize: '12pt', fontWeight: 'normal', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>{getTodayFormatted()}</p>
+                  </td>
                 </tr>
               </tbody>
             </table>
 
 
             {/* 3. 수신, 참조, 제목 (12pt, 굵기 해제, 공백 제거, 하단 얇은 선 적용) */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none', fontSize: '12pt', marginTop: '10px', borderBottom: '1px solid black', paddingBottom: '10px' }}>
+            <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ borderCollapse: 'collapse', border: 'none', marginTop: '10px' }}>
               <tbody>
                 <tr>
-                  <td style={{ width: '60px', padding: 0, fontWeight: 'normal', msoLineHeightRule: 'exactly', lineHeight: '100%' }}>수신 :</td>
-                  <td style={{ padding: 0, fontWeight: 'normal', msoLineHeightRule: 'exactly', lineHeight: '100%' }}>{r.recipient.trim()}{isPromo ? ' 대표이사' : ''}</td>
+                  <td width="60" align="left" style={{ padding: 0 }}>
+                    <p style={{ margin: 0, padding: 0, fontSize: '12pt', fontWeight: 'normal', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>수 신 :</p>
+                  </td>
+                  <td align="left" style={{ padding: 0 }}>
+                    <p style={{ margin: 0, padding: 0, fontSize: '12pt', fontWeight: 'normal', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>{r.recipient.trim()}{isPromo ? ' 대표이사' : ''}</p>
+                  </td>
                 </tr>
                 <tr>
-                  <td style={{ width: '60px', padding: 0, fontWeight: 'normal', msoLineHeightRule: 'exactly', lineHeight: '100%' }}>참조 :</td>
-                  <td style={{ padding: 0, fontWeight: 'normal', msoLineHeightRule: 'exactly', lineHeight: '100%' }}>관련업무 담당자</td>
+                  <td width="60" align="left" style={{ padding: 0 }}>
+                    <p style={{ margin: 0, padding: 0, fontSize: '12pt', fontWeight: 'normal', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>참 조 :</p>
+                  </td>
+                  <td align="left" style={{ padding: 0 }}>
+                    <p style={{ margin: 0, padding: 0, fontSize: '12pt', fontWeight: 'normal', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>관련업무 담당자</p>
+                  </td>
                 </tr>
                 <tr>
-                  <td style={{ width: '60px', padding: '0 0 10px 0', fontWeight: 'normal', msoLineHeightRule: 'exactly', lineHeight: '100%' }}>제목 :</td>
-                  <td style={{ padding: '0 0 10px 0', fontWeight: 'normal', msoLineHeightRule: 'exactly', lineHeight: '100%' }}>
-                    {isPromo ? `프로모션(${r.title.trim()}) 인천SSG랜더스필드 조건부 대관 허가 알림` : `(${r.recipient.trim()} ${new Date().getFullYear() % 100}년 ${new Date().getMonth()+1}월) 문학경기장 조건부 대관 허가 알림`}
+                  <td width="60" align="left" style={{ padding: '0 0 10px 0', borderBottom: '1px solid black' }}>
+                    <p style={{ margin: 0, padding: 0, fontSize: '12pt', fontWeight: 'normal', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>제 목 :</p>
+                  </td>
+                  <td align="left" style={{ padding: '0 0 10px 0', borderBottom: '1px solid black' }}>
+                    <p style={{ margin: 0, padding: 0, fontSize: '12pt', fontWeight: 'normal', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
+                      {isPromo ? `프로모션(${r.title.trim()}) 인천SSG랜더스필드 조건부 대관 허가 알림` : `(${r.recipient.trim()} ${new Date().getFullYear() % 100}년 ${new Date().getMonth()+1}월) 문학경기장 조건부 대관 허가 알림`}
+                    </p>
                   </td>
                 </tr>
               </tbody>
             </table>
 
 
-            {/* 4. 본문 영역 (11pt, 줄간격 0.8 배수, 단락 여백 완전히 제거) */}
-            <div style={{ fontSize: '11pt', marginTop: '15px' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none' }}>
-                <tbody>
-                  <tr><td style={{ padding: 0, paddingLeft: '15px', msoLineHeightRule: 'exactly', lineHeight: '80%' }}>1. 귀 사의 발전을 기원합니다.</td></tr>
-                  <tr><td style={{ padding: 0, paddingLeft: '15px', msoLineHeightRule: 'exactly', lineHeight: '80%' }}>2. {isPromo ? '인천SSG랜더스필드 대관 사용을' : '요청하신 대관 신청에 대해'} 아래와 같이 조건부 허가함을 알려드립니다.</td></tr>
-                  <tr><td style={{ padding: 0, paddingLeft: '15px', msoLineHeightRule: 'exactly', lineHeight: '80%' }}>3. 대관 사용 시 안전관리{isPromo ? ' 예방 및 공유재산' : ' 및 공공체육시설'} 보존에 유의하여 주시기 바랍니다.</td></tr>
-                  {/* 8pt 적용 */}
-                  <tr><td style={{ padding: 0, paddingLeft: '30px', fontSize: '8pt', msoLineHeightRule: 'exactly', lineHeight: '80%' }}>*첨부 문학경기장 대관 허가조건 및 유의사항 참고</td></tr>
-                  <tr><td style={{ padding: '15px 0', textAlign: 'center', msoLineHeightRule: 'exactly', lineHeight: '80%' }}>- 아 래 -</td></tr>
-                </tbody>
-              </table>
+            {/* 4. 본문 영역 (11pt, 줄간격 1배수(100%), 단락 전후 여백 완벽 제거) */}
+            <div style={{ marginTop: '15px' }}>
+              <p style={{ margin: 0, padding: 0, paddingLeft: '15px', fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
+                1. 귀 사의 발전을 기원합니다.
+              </p>
+              <p style={{ margin: 0, padding: 0, paddingLeft: '15px', fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
+                2. {isPromo ? '인천SSG랜더스필드 대관 사용을' : '요청하신 대관 신청에 대해'} 아래와 같이 조건부 허가함을 알려드립니다.
+              </p>
+              <p style={{ margin: 0, padding: 0, paddingLeft: '15px', fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
+                3. 대관 사용 시 안전관리{isPromo ? ' 예방 및 공유재산' : ' 및 공공체육시설'} 보존에 유의하여 주시기 바랍니다.
+              </p>
+              
+              {/* 8pt 적용 */}
+              <p style={{ margin: 0, padding: 0, paddingLeft: '30px', fontSize: '8pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif", paddingTop: '3px' }}>
+                *첨부 문학경기장 대관 허가조건 및 유의사항 참고
+              </p>
 
 
-              <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none', marginLeft: '15px' }}>
-                <tbody>
-                  <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>가. {isPromo ? '대관 허가 개요' : `사용목적 : ${r.title.trim()}`}</td></tr>
-                  {isPromo && (
-                    <tr>
-                      <td style={{ padding: 0, paddingLeft: '20px' }}>
-                        <table style={{ border: 'none', width: '100%', borderCollapse: 'collapse' }}>
-                          <tbody>
-                            <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>- 사용목적 : 프로모션({r.title.trim()})</td></tr>
-                            <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>- 허가기간 : {dateStr}</td></tr>
-                            <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>- 허가장소 : {locStr}</td></tr>
-                          </tbody>
-                        </table>
-                      </td>
-                    </tr>
+              <p style={{ margin: 0, padding: '15px 0', textAlign: 'center', fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
+                - 아 래 -
+              </p>
+
+
+              <div style={{ paddingLeft: '15px' }}>
+                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
+                  가. {isPromo ? '대관 허가 개요' : `사용목적 : ${r.title.trim()}`}
+                </p>
+                {isPromo && (
+                  <div style={{ paddingLeft: '20px' }}>
+                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 사용목적 : 프로모션({r.title.trim()})</p>
+                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 허가기간 : {dateStr}</p>
+                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 허가장소 : {locStr}</p>
+                  </div>
+                )}
+
+
+                <p style={{ margin: 0, padding: 0, paddingTop: '5px', fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
+                  나. {isPromo ? '대관료 납부 안내' : '허가기간 및 허가장소'}
+                </p>
+                <div style={{ paddingLeft: '20px' }}>
+                  {isPromo ? (
+                    <React.Fragment>
+                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 대관료 : {formatCurrency(fees.grandTotal)}원 (부가세 포함)</p>
+                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 납부기한 : {r.paymentDeadline} 17시</p>
+                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 납부계좌 : 신한은행 100-029-560532 (예금주 : 주식회사 신세계야구단)</p>
+                    </React.Fragment>
+                  ) : (
+                    r.dates.map((d, idx) => {
+                      const dateTxt = r.dateType === '기간' ? `${d.date}~${d.endDate}` : d.date;
+                      return <p key={idx} style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- {dateTxt} / {getOfficialLocationName(d.location)} ({d.time})</p>
+                    })
                   )}
+                </div>
 
 
-                  <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>나. {isPromo ? '대관료 납부 안내' : '허가기간 및 허가장소'}</td></tr>
-                  <tr>
-                    <td style={{ padding: 0, paddingLeft: '20px' }}>
-                      <table style={{ border: 'none', width: '100%', borderCollapse: 'collapse' }}>
-                        <tbody>
-                          {isPromo ? (
-                            <React.Fragment>
-                              <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>- 대관료 : {formatCurrency(fees.grandTotal)}원 (부가세 포함)</td></tr>
-                              <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>- 납부기한 : {r.paymentDeadline} 17시</td></tr>
-                              <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>- 납부계좌 : 신한은행 100-029-560532 (예금주 : 주식회사 신세계야구단)</td></tr>
-                            </React.Fragment>
-                          ) : (
-                            r.dates.map((d, idx) => {
-                              const dateTxt = r.dateType === '기간' ? `${d.date}~${d.endDate}` : d.date;
-                              return <tr key={idx}><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>- {dateTxt} / {getOfficialLocationName(d.location)} ({d.time})</td></tr>
-                            })
-                          )}
-                        </tbody>
-                      </table>
-                    </td>
-                  </tr>
+                <p style={{ margin: 0, padding: 0, paddingTop: '5px', fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
+                  다. {isPromo ? '대관 허가 조건' : '대관 조건'}
+                </p>
+                <div style={{ paddingLeft: '20px' }}>
+                  {!isPromo && (
+                    <React.Fragment>
+                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 대관료 기한 내 납부 : {formatCurrency(fees.grandTotal)}원</p>
+                      {/* 8pt 적용 */}
+                      <p style={{ margin: 0, padding: 0, fontSize: '8pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>*기한 : {r.paymentDeadline} 17시 / 계좌 : 신한 100-029-560532 ㈜신세계야구단</p>
+                    </React.Fragment>
+                  )}
+                  {isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 대관료 기한 내 납부</p>}
+                  <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- {isPromo ? '근무자 및 참가자에 대한 안전관리' : '안전관리 : ①관계자/참가자 안전 확보 ②보험 가입'}</p>
+                  {!isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 시설보존 : ①시설 원형 보존 ②사후 청소 ③시설 훼손 시 원상복구 이행</p>}
+                  {isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- (필요 시) 인허가 절차 및 관련 법령 준수</p>}
+                </div>
+              </div>
 
 
-                  <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>다. {isPromo ? '대관 허가 조건' : '대관 조건'}</td></tr>
-                  <tr>
-                    <td style={{ padding: 0, paddingLeft: '20px' }}>
-                      <table style={{ border: 'none', width: '100%', borderCollapse: 'collapse' }}>
-                        <tbody>
-                          {!isPromo && (
-                            <tr>
-                              <td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>
-                                - 대관료 기한 내 납부 : {formatCurrency(fees.grandTotal)}원<br/>
-                                {/* 8pt 적용 */}
-                                <span style={{ fontSize: '8pt', msoLineHeightRule: 'exactly', lineHeight: '80%' }}>*기한 : {r.paymentDeadline} 17시 / 계좌 : 신한 100-029-560532 ㈜신세계야구단</span>
-                              </td>
-                            </tr>
-                          )}
-                          {isPromo && <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>- 대관료 기한 내 납부</td></tr>}
-                          <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>- {isPromo ? '근무자 및 참가자에 대한 안전관리' : '안전관리 : ①관계자/참가자 안전 확보 ②보험 가입'}</td></tr>
-                          {!isPromo && <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>- 시설보존 : ①시설 원형 보존 ②사후 청소 ③시설 훼손 시 원상복구 이행</td></tr>}
-                          {isPromo && <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>- (필요 시) 인허가 절차 및 관련 법령 준수</td></tr>}
-                        </tbody>
-                      </table>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              <div style={{ marginLeft: '15px', marginTop: '15px' }}>
+                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>첨부</p>
+                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>1. 문학경기장 대관 사용 견적서</p>
+                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>2. 문학경기장 대관 허가조건 및 유의사항</p>
+                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>3. 사업자등록증(주식회사 신세계야구단)</p>
+                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>4. 통장 사본(주식회사 신세계야구단). “끝”</p>
+              </div>
 
 
-              <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none', marginLeft: '15px', marginTop: '15px' }}>
-                <tbody>
-                  <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>첨부</td></tr>
-                  <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>1. 문학경기장 대관 사용 견적서</td></tr>
-                  <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>2. 문학경기장 대관 허가조건 및 유의사항</td></tr>
-                  <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>3. 사업자등록증(주식회사 신세계야구단)</td></tr>
-                  <tr><td style={{ padding: 0, msoLineHeightRule: 'exactly', lineHeight: '80%' }}>4. 통장 사본(주식회사 신세계야구단). “끝”</td></tr>
-                </tbody>
-              </table>
-
-
-              <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none', marginTop: '40px' }}>
-                <tbody>
-                  <tr><td style={{ textAlign: 'center', fontSize: '16pt', fontWeight: 'bold', padding: 0, msoLineHeightRule: 'exactly', lineHeight: '100%' }}>주식회사 신세계야구단 대표이사</td></tr>
-                </tbody>
-              </table>
+              <div style={{ marginTop: '40px', textAlign: 'center' }}>
+                <p style={{ margin: 0, padding: 0, fontSize: '16pt', fontWeight: 'bold', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>주식회사 신세계야구단 대표이사</p>
+              </div>
             </div>
           </div>
         );
