@@ -116,7 +116,6 @@
     };
 
 
-    // 공식 명칭 변환
     const getOfficialLocationName = (loc) => {
         if(loc === '문학 주육상장') return '문학주경기장 육상장';
         if(loc === '문학 주축구장') return '문학주경기장 축구장';
@@ -291,7 +290,8 @@
       };
 
 
-      const startPress = (rental) => {
+      // 마우스/터치로 꾹 누르거나 더블클릭할 때 동작
+      const startPress = (e, rental) => {
         pressTimer.current = setTimeout(() => { handleDelete(rental); }, 800);
       };
 
@@ -313,7 +313,7 @@
       };
 
 
-      // --- 단가 계산 및 표 데이터 추출 로직 ---
+      // --- 단가 계산 로직 ---
       const calculateFees = (rental) => {
         let items = [];
         let totalBaseFee = 0;
@@ -453,7 +453,6 @@
           <div id="export-area" style={{ width: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif", fontSize: '11pt', color: 'black', lineHeight: '1.6' }}>
             <table style={{ width: '100%', border: 'none', borderCollapse: 'collapse', marginBottom: '5px' }}>
               <tbody>
-                {/* 상단 중앙 로고 정렬 및 검은색 하단 선 적용 */}
                 <tr>
                   <td align="center" style={{ textAlign: 'center', paddingBottom: '10px', borderBottom: '2px solid black' }}>
                     <center>
@@ -778,13 +777,15 @@
                       {dayRentals.map(r => (
                         <div 
                           key={r.id} 
-                          title="꾹 누르면 일정이 삭제됩니다."
+                          title="더블클릭 또는 꾹 누르면 일정이 삭제됩니다."
                           className={`text-xs px-1.5 py-1 rounded truncate select-none cursor-pointer transition-transform active:scale-95 ${r.category === '프로모션' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'}`}
-                          onMouseDown={() => startPress(r)}
+                          onDoubleClick={() => handleDelete(r)}
+                          onMouseDown={(e) => startPress(e, r)}
                           onMouseUp={cancelPress}
                           onMouseLeave={cancelPress}
-                          onTouchStart={() => startPress(r)}
+                          onTouchStart={(e) => startPress(e, r)}
                           onTouchEnd={cancelPress}
+                          onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); return false; }}
                         >
                           {r.title}
                         </div>
@@ -794,7 +795,7 @@
                 );
               })}
             </div>
-            <p className="text-xs text-gray-500 mt-3">* 캘린더에 등록된 일정을 <strong>꾹 누르면</strong> 해당 대관 건을 삭제할 수 있습니다.</p>
+            <p className="text-xs text-gray-500 mt-3">* 캘린더에 등록된 일정을 <strong>더블클릭(PC) 하거나 꾹 누르면(모바일)</strong> 해당 대관 건을 삭제할 수 있습니다.</p>
           </div>
         );
       };
