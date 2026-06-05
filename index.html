@@ -85,12 +85,7 @@
 
 
     const RESTORATION_FEE_PER_DAY = 550000;
-    const PROMO_COMMERCIAL_FEE_PER_SQM = 1400;
-
-
     const UNIT_PRICE_FAC_ROOM_HOUR = 10000;
-    const UNIT_PRICE_WATER = 100;
-    const UNIT_PRICE_ELEC = 200;
 
 
     const formatCurrency = (num) => Math.round(num).toLocaleString('ko-KR');
@@ -98,7 +93,7 @@
 
     const getTodayFormatted = (format = 'word') => {
       const d = new Date();
-      if (format === 'excel') return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (format === 'excel') return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}.`;
       return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.`;
     };
 
@@ -212,13 +207,17 @@
       const [formRestoration, setFormRestoration] = useState(false);
 
 
+      const [formCommercialUsage, setFormCommercialUsage] = useState(false);
+      const [formCommercialArea, setFormCommercialArea] = useState('');
+
+
       const [formFacUsage, setFormFacUsage] = useState(false);
       const [formFacRooms, setFormFacRooms] = useState('');
       const [formFacHours, setFormFacHours] = useState('');
       const [formWaterUsage, setFormWaterUsage] = useState(false);
-      const [formWaterArea, setFormWaterArea] = useState('');
+      const [formWaterAmount, setFormWaterAmount] = useState('');
       const [formElecUsage, setFormElecUsage] = useState(false);
-      const [formElecArea, setFormElecArea] = useState('');
+      const [formElecAmount, setFormElecAmount] = useState('');
 
 
       const [currentDate, setCurrentDate] = useState(new Date());
@@ -277,9 +276,10 @@
           paymentDeadline: formPaymentDeadline, 
           recipient: formRecipient, 
           restorationFee: formRestoration, 
+          commercialUsage: formCommercialUsage, commercialArea: formCommercialArea,
           facUsage: formFacUsage, facRooms: formFacRooms, facHours: formFacHours,
-          waterUsage: formWaterUsage, waterArea: formWaterArea,
-          elecUsage: formElecUsage, elecArea: formElecArea,
+          waterUsage: formWaterUsage, waterAmount: formWaterAmount,
+          elecUsage: formElecUsage, elecAmount: formElecAmount,
           paymentDate: '', docsReceived: false, docsSent: false, suspenseReceipt: false, taxInvoice: false, incomeResolution: false, allComplete: false, 
           createdAt: Date.now(),
           headcount: (formCategory === '경기장 대관' || formCategory === '공연 대관') ? formHeadcount : null
@@ -289,9 +289,10 @@
         db.collection('rentals').add(newRental).then(() => {
           alert('대관 일정이 등록되었습니다.');
           setFormTitle(''); setFormPaymentDeadline(''); setFormRecipient(''); setFormRestoration(false); setFormHeadcount('');
+          setFormCommercialUsage(false); setFormCommercialArea('');
           setFormFacUsage(false); setFormFacRooms(''); setFormFacHours('');
-          setFormWaterUsage(false); setFormWaterArea('');
-          setFormElecUsage(false); setFormElecArea('');
+          setFormWaterUsage(false); setFormWaterAmount('');
+          setFormElecUsage(false); setFormElecAmount('');
           setFormDates([{ date: '', endDate: '', location: '문학 주육상장', area: '', time: '조기 (06:00~09:00)', days: 1 }]);
         }).catch(err => alert("등록 중 오류가 발생했습니다: " + err.message));
       };
@@ -328,7 +329,7 @@
       };
 
 
-      // --- 소계 a,b,c,d 별 분류 및 1원 단위 절사 로직 ---
+      // --- 소계 a,b,c,d 별 분류 및 10원 단위 절사 로직 ---
       const calculateFees = (rental) => {
         let itemsA = [];
         let itemsB = [];
@@ -338,8 +339,11 @@
 
         let feeA = 0; // 전용사용료 소계
         let feeB = 0; // 부속시설사용료 소계
-        let feeC = 0; // 기타사용료 소계
+        let feeC = 0; // 기타사용료 소계 (상업)
         let feeD = 0; // 시설복구비 소계
+
+
+        let totalDays = 0;
 
 
         if (rental.category === '프로모션') {
@@ -352,13 +356,14 @@
                 } else if (d.days && d.days > 1) {
                     daysCount = parseInt(d.days);
                 }
+                totalDays += daysCount;
+
+
                 const area = parseFloat(d.area) || 0;
                 let baseRate = (d.location === '동문광장' ? 746032.11 : 758770.47) / 13351;
                 const currentBase = baseRate * area * daysCount;
-                const currentComm = PROMO_COMMERCIAL_FEE_PER_SQM * area * daysCount;
                 
                 feeA += currentBase;
-                feeC += currentComm; // 상업사용료는 기타사용료(C)로 분류
 
 
                 itemsA.push({
@@ -366,10 +371,6 @@
                   unitText: `1일, 1㎡<br/>${(Math.round(baseRate*10)/10).toFixed(1)}원`,
                   qtyText: `${daysCount}일, ${area}㎡`,
                   total: Math.round(currentBase), note: ''
-                });
-                itemsC.push({
-                  name: `상업사용료`, unitText: `1일, 1㎡<br/>1,400원`,
-                  qtyText: `${daysCount}일, ${area}㎡`, total: Math.round(currentComm), note: ''
                 });
             });
         } else {
@@ -386,6 +387,7 @@
                     const start = new Date(d.date);
                     const end = new Date(d.endDate);
                     const diffDays = Math.max(1, Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1);
+                    totalDays += diffDays;
                     for(let i=0; i<diffDays; i++) {
                         const cur = new Date(start.getTime() + i * 24*60*60*1000);
                         const day = cur.getDay();
@@ -394,9 +396,11 @@
                     }
                 } else {
                     const dateObj = new Date(d.date);
+                    const daysVal = parseInt(d.days) || 1;
+                    totalDays += daysVal;
                     const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
-                    if (isWeekend) weekendCount = parseInt(d.days) || 1;
-                    else weekdayCount = parseInt(d.days) || 1;
+                    if (isWeekend) weekendCount = daysVal;
+                    else weekdayCount = daysVal;
                 }
 
 
@@ -421,9 +425,9 @@
 
             Object.values(agg).forEach(g => {
                 const totalItemFee = g.price * g.count;
-                feeA += totalItemFee; // 대관 장소 사용료 합은 (A)
+                feeA += totalItemFee; 
                 itemsA.push({
-                    name: `대관사용료<br/>(${getOfficialLocationName(g.location)})`,
+                    name: `[체육시설] 전용사용료<br/>(${getOfficialLocationName(g.location)})`,
                     unitText: `${g.type} ${g.timeLabel}<br/>${formatCurrency(g.price)}원`,
                     qtyText: `${g.count}일`,
                     total: totalItemFee,
@@ -433,41 +437,45 @@
         }
 
 
-        // B: 부속시설사용료
+        // B: 부속시설사용료 (실/시간, 상하수도, 전기 모두 포함)
         if (rental.facUsage) {
           const amt = (parseInt(rental.facRooms)||0) * (parseInt(rental.facHours)||0) * UNIT_PRICE_FAC_ROOM_HOUR;
           feeB += amt;
           itemsB.push({ name: '부속시설 사용료', unitText: `1실 1시간<br/>${formatCurrency(UNIT_PRICE_FAC_ROOM_HOUR)}원`, qtyText: `${rental.facRooms}실, ${rental.facHours}시간`, total: amt, note: '' });
         }
         if (rental.waterUsage) {
-          const amt = (parseFloat(rental.waterArea)||0) * UNIT_PRICE_WATER;
+          const amt = parseInt(rental.waterAmount) || 0;
           feeB += amt;
-          itemsB.push({ name: '상하수도 요금', unitText: `1㎡<br/>${formatCurrency(UNIT_PRICE_WATER)}원`, qtyText: `${rental.waterArea}㎡`, total: amt, note: '' });
+          itemsB.push({ name: '상하수도 요금', unitText: '-', qtyText: `1식`, total: amt, note: '' });
         }
         if (rental.elecUsage) {
-          const amt = (parseFloat(rental.elecArea)||0) * UNIT_PRICE_ELEC;
+          const amt = parseInt(rental.elecAmount) || 0;
           feeB += amt;
-          itemsB.push({ name: '전기사용료', unitText: `1㎡<br/>${formatCurrency(UNIT_PRICE_ELEC)}원`, qtyText: `${rental.elecArea}㎡`, total: amt, note: '' });
+          itemsB.push({ name: '전기사용료', unitText: '-', qtyText: `1식`, total: amt, note: '' });
+        }
+
+
+        // C: 기타사용료 (상업사용료)
+        if (rental.commercialUsage) {
+            const area = parseFloat(rental.commercialArea) || 0;
+            const commAmt = totalDays * area * 1400;
+            feeC += commAmt;
+            itemsC.push({
+                name: `상업사용료`, unitText: `1일, 1㎡<br/>1,400원`,
+                qtyText: `${totalDays}일, ${area}㎡`, total: Math.round(commAmt), note: ''
+            });
         }
 
 
         // D: 시설복구비
         if (rental.restorationFee) {
-          let totalDays = 0;
-          if (rental.dateType === '기간') {
-              const start = new Date(rental.dates[0].date);
-              const end = new Date(rental.dates[0].endDate);
-              totalDays = Math.max(1, Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1);
-          } else {
-              totalDays = rental.dates.reduce((acc, d) => acc + (parseInt(d.days) || 1), 0);
-          }
-          const amt = RESTORATION_FEE_PER_DAY * totalDays;
+          const amt = RESTORATION_FEE_PER_DAY * (totalDays > 0 ? totalDays : 1);
           feeD += amt;
-          itemsD.push({ name: '원상복구 예치금', unitText: `1일<br/>550,000원`, qtyText: `${totalDays}일`, total: amt, note: '행사 종료 후 반환' });
+          itemsD.push({ name: '원상복구 예치금', unitText: `1일<br/>550,000원`, qtyText: `${totalDays > 0 ? totalDays : 1}일`, total: amt, note: '행사 종료 후 반환' });
         }
 
 
-        // 1원 단위 절사
+        // 10원 단위 미만 절사 (내림)
         feeA = Math.floor(feeA / 10) * 10;
         feeB = Math.floor(feeB / 10) * 10;
         feeC = Math.floor(feeC / 10) * 10;
@@ -579,72 +587,77 @@
                 3. 대관 사용 시 안전관리{isPromo ? ' 예방 및 공유재산' : ' 및 공공체육시설'} 보존에 유의하여 주시기 바랍니다.
               </p>
               
+              {/* 스페이스바 4번(&nbsp; 4개) */}
               <p style={{ margin: 0, padding: 0, paddingLeft: '30px', fontSize: '8pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif", paddingTop: '3px' }}>
-                *첨부 문학경기장 대관 허가조건 및 유의사항 참고
+                &nbsp;&nbsp;&nbsp;&nbsp;*첨부 문학경기장 대관 허가조건 및 유의사항 참고
               </p>
 
 
+              {/* "-아 래-" -> "-아 래-" (가운데 한칸) */}
               <p style={{ margin: 0, padding: '15px 0', textAlign: 'center', fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
                 - 아 래 -
               </p>
 
 
               <div style={{ paddingLeft: '15px' }}>
+                {/* 가/나/다 앞 스페이스바 1번 */}
                 <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
-                  가. {isPromo ? '대관 허가 개요' : `사용목적 : ${r.title.trim()}`}
+                  &nbsp;가. {isPromo ? '대관 허가 개요' : `사용목적 : ${r.title.trim()}`}
                 </p>
                 {isPromo && (
                   <div style={{ paddingLeft: '20px' }}>
-                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 사용목적 : 프로모션({r.title.trim()})</p>
-                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 허가기간 : {dateStr}</p>
-                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 허가장소 : {locStr}</p>
+                    {/* - 앞 스페이스바 2번 */}
+                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;- 사용목적 : 프로모션({r.title.trim()})</p>
+                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;- 허가기간 : {dateStr}</p>
+                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;- 허가장소 : {locStr}</p>
                   </div>
                 )}
 
 
                 <p style={{ margin: 0, padding: 0, paddingTop: '5px', fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
-                  나. {isPromo ? '대관료 납부 안내' : '허가기간 및 허가장소'}
+                  &nbsp;나. {isPromo ? '대관료 납부 안내' : '허가기간 및 허가장소'}
                 </p>
                 <div style={{ paddingLeft: '20px' }}>
                   {isPromo ? (
                     <React.Fragment>
-                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 대관료 : {formatCurrency(fees.grandTotal)}원 (부가세 포함)</p>
-                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 납부기한 : {r.paymentDeadline} 17시</p>
-                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 납부계좌 : 신한은행 100-029-560532 (예금주 : 주식회사 신세계야구단)</p>
+                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;- 대관료 : {formatCurrency(fees.grandTotal)}원 (부가세 포함)</p>
+                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;- 납부기한 : {r.paymentDeadline} 17시</p>
+                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;- 납부계좌 : 신한은행 100-029-560532 (예금주 : 주식회사 신세계야구단)</p>
                     </React.Fragment>
                   ) : (
                     r.dates.map((d, idx) => {
                       const dateTxt = r.dateType === '기간' ? `${d.date}~${d.endDate}` : d.date;
-                      return <p key={idx} style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- {dateTxt} / {getOfficialLocationName(d.location)} ({d.time})</p>
+                      return <p key={idx} style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;- {dateTxt} / {getOfficialLocationName(d.location)} ({d.time})</p>
                     })
                   )}
                 </div>
 
 
                 <p style={{ margin: 0, padding: 0, paddingTop: '5px', fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
-                  다. {isPromo ? '대관 허가 조건' : '대관 조건'}
+                  &nbsp;다. {isPromo ? '대관 허가 조건' : '대관 조건'}
                 </p>
                 <div style={{ paddingLeft: '20px' }}>
                   {!isPromo && (
                     <React.Fragment>
-                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 대관료 기한 내 납부 : {formatCurrency(fees.grandTotal)}원</p>
-                      <p style={{ margin: 0, padding: 0, fontSize: '8pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>*기한 : {r.paymentDeadline} 17시 / 계좌 : 신한 100-029-560532 ㈜신세계야구단</p>
+                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;- 대관료 기한 내 납부 : {formatCurrency(fees.grandTotal)}원</p>
+                      <p style={{ margin: 0, padding: 0, fontSize: '8pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;*기한 : {r.paymentDeadline} 17시 / 계좌 : 신한 100-029-560532 ㈜신세계야구단</p>
                     </React.Fragment>
                   )}
-                  {isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 대관료 기한 내 납부</p>}
-                  <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- {isPromo ? '근무자 및 참가자에 대한 안전관리' : '안전관리 : ①관계자/참가자 안전 확보 ②보험 가입'}</p>
-                  {!isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- 시설보존 : ①시설 원형 보존 ②사후 청소 ③시설 훼손 시 원상복구 이행</p>}
-                  {isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>- (필요 시) 인허가 절차 및 관련 법령 준수</p>}
+                  {isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;- 대관료 기한 내 납부</p>}
+                  <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;- {isPromo ? '근무자 및 참가자에 대한 안전관리' : '안전관리 : ①관계자/참가자 안전 확보 ②보험 가입'}</p>
+                  {!isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;- 시설보존 : ①시설 원형 보존 ②사후 청소 ③시설 훼손 시 원상복구 이행</p>}
+                  {isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;- (필요 시) 인허가 절차 및 관련 법령 준수</p>}
                 </div>
               </div>
 
 
+              {/* 첨부 앞 스페이스바 1번 */}
               <div style={{ marginLeft: '15px', marginTop: '15px' }}>
-                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>첨부</p>
-                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>1. 문학경기장 대관 사용 견적서</p>
-                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>2. 문학경기장 대관 허가조건 및 유의사항</p>
-                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>3. 사업자등록증(주식회사 신세계야구단)</p>
-                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>4. 통장 사본(주식회사 신세계야구단). “끝”</p>
+                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;첨부</p>
+                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;1. 문학경기장 대관 사용 견적서</p>
+                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;2. 문학경기장 대관 허가조건 및 유의사항</p>
+                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;3. 사업자등록증(주식회사 신세계야구단)</p>
+                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;4. 통장 사본(주식회사 신세계야구단). “끝”</p>
               </div>
 
 
@@ -657,7 +670,7 @@
       };
 
 
-      // --- 견적서 (Excel) 데이터 행 렌더러 (콤마, 1원단위 절사 라벨 적용) ---
+      // --- 견적서 (Excel) 데이터 행 렌더러 (콤마, 10원 단위 미만 절사 라벨 적용, 테두리 1px) ---
       const renderExcelRow = (name, unitText, qtyText, amount, note, isSubtotal = false) => {
         const displayAmount = amount === 0 ? '0' : formatCurrency(amount);
         const displayQty = qtyText || '-';
@@ -665,10 +678,11 @@
         if (isSubtotal) {
           return (
             <tr style={{ backgroundColor: '#f2f2f2' }}>
-              <td colSpan="4" style={{ borderTop: '1px solid black', borderBottom: '1px solid black', borderLeft: '2px solid black', borderRight: '1px solid black', padding: '8px', textAlign: 'center', fontWeight: 'bold' }} dangerouslySetInnerHTML={{ __html: name }}></td>
+              <td colSpan="2" style={{ border: '1px solid black', padding: '8px', textAlign: 'left', fontWeight: 'bold' }} dangerouslySetInnerHTML={{ __html: name }}></td>
               <td colSpan="1" style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }}>-</td>
-              <td colSpan="2" style={{ border: '1px solid black', padding: '8px', textAlign: 'right', fontWeight: 'bold', msoNumberFormat: '\\#\\,\\#\\#0' }}>{displayAmount}</td>
-              <td colSpan="1" style={{ borderTop: '1px solid black', borderBottom: '1px solid black', borderLeft: '1px solid black', borderRight: '2px solid black', padding: '8px', textAlign: 'center' }}>1원 단위 절사</td>
+              <td colSpan="1" style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }}>-</td>
+              <td colSpan="1" style={{ border: '1px solid black', padding: '8px', textAlign: 'right', fontWeight: 'bold', msoNumberFormat: '\\#\\,\\#\\#0' }}>{displayAmount}</td>
+              <td colSpan="1" style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }}>10원 미만 절사</td>
             </tr>
           );
         }
@@ -676,87 +690,89 @@
 
         return (
           <tr>
-            <td colSpan="2" style={{ borderTop: '1px solid black', borderBottom: '1px solid black', borderLeft: '2px solid black', borderRight: '1px solid black', padding: '8px', textAlign: 'left' }} dangerouslySetInnerHTML={{ __html: name }}></td>
-            <td colSpan="2" style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }} dangerouslySetInnerHTML={{ __html: unitText || '-' }}></td>
+            <td colSpan="2" style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }} dangerouslySetInnerHTML={{ __html: name }}></td>
+            <td colSpan="1" style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }} dangerouslySetInnerHTML={{ __html: unitText || '-' }}></td>
             <td colSpan="1" style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }}>{displayQty}</td>
-            <td colSpan="2" style={{ border: '1px solid black', padding: '8px', textAlign: 'right', msoNumberFormat: '\\#\\,\\#\\#0' }}>{displayAmount}</td>
-            <td colSpan="1" style={{ borderTop: '1px solid black', borderBottom: '1px solid black', borderLeft: '1px solid black', borderRight: '2px solid black', padding: '8px', textAlign: 'center' }}>{note}</td>
+            <td colSpan="1" style={{ border: '1px solid black', padding: '8px', textAlign: 'right', msoNumberFormat: '\\#\\,\\#\\#0' }}>{displayAmount}</td>
+            <td colSpan="1" style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }}>{note}</td>
           </tr>
         );
       };
 
 
-      // --- 견적서 (Excel) 전체 렌더러 (로고 삭제, 수신인/발행인 박스, 음영, 가운데 정렬, a/b/c/d 소계 매핑) ---
+      // --- 견적서 (Excel) 렌더러 (로고 없음, 수신인/발행인 음영+테두리 구조 완벽 동기화, 콤마 적용) ---
       const renderExcelTemplate = (r, fees) => {
         return (
           <div id="export-area" style={{ fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif", fontSize: '10pt', color: 'black' }}>
             <table border="0" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center' }}>
               <colgroup>
-                <col width="12%" />
-                <col width="12%" />
-                <col width="16%" />
-                <col width="16%" />
+                <col width="15%" />
+                <col width="15%" />
+                <col width="15%" />
                 <col width="10%" />
-                <col width="10%" />
-                <col width="14%" />
-                <col width="10%" />
+                <col width="25%" />
+                <col width="20%" />
               </colgroup>
               <tbody>
-                {/* 제목 (로고 없이 크게 중앙 정렬) */}
+                {/* 1. 제목 (로고 없음) */}
                 <tr>
-                  <td colSpan="8" style={{ fontSize: '24pt', fontWeight: 'bold', padding: '15px 0', textAlign: 'center', border: 'none' }}>
+                  <td colSpan="6" style={{ fontSize: '24pt', fontWeight: 'bold', padding: '15px 0', textAlign: 'left', border: 'none' }}>
                     문학경기장 사용료 견적서(INVOICE)
                   </td>
                 </tr>
+                <tr><td colSpan="6" style={{ height: '15px', border: 'none' }}></td></tr>
                 
-                {/* 1. 수신인 / 발행일 (3,4열 병합 및 5,6열 병합 중앙정렬) */}
+                {/* 2. 수신인 박스 (음영, 얇은 테두리) */}
                 <tr>
-                  <td colSpan="2" style={{ border: '2px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>수 신 인</td>
-                  <td colSpan="2" style={{ border: '2px solid black', padding: '8px', textAlign: 'center' }}>{r.recipient} 귀하</td>
-                  <td colSpan="2" style={{ border: '2px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>발 행 일</td>
-                  <td colSpan="2" style={{ border: '2px solid black', padding: '8px', textAlign: 'center' }}>{getTodayFormatted('excel')}</td>
+                  <td colSpan="1" style={{ border: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>수 신 인</td>
+                  <td colSpan="5" style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{r.recipient} 귀하</td>
                 </tr>
-                <tr><td colSpan="8" style={{ height: '15px', border: 'none' }}></td></tr>
+                {/* 3. 발행일 박스 (음영, 얇은 테두리) */}
+                <tr>
+                  <td colSpan="1" style={{ border: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>발 행 일</td>
+                  <td colSpan="5" style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{getTodayFormatted('excel')}</td>
+                </tr>
+                <tr><td colSpan="6" style={{ height: '15px', border: 'none' }}></td></tr>
                 
-                {/* 2. 발행인 (공급자) 가로쓰기, 굵은 테두리 및 얇은 테두리 박스 구성 */}
+                {/* 4. 발행인(공급자) 가로쓰기, 테두리 굵은/얇은선 박스 구성 */}
                 <tr>
-                  <td colSpan="2" rowSpan="3" style={{ border: '2px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center', verticalAlign: 'middle' }}>발 행 인 (공급자)</td>
-                  <td colSpan="1" style={{ border: '1px solid black', borderTop: '2px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>등록번호</td>
-                  <td colSpan="2" style={{ border: '1px solid black', borderTop: '2px solid black', padding: '8px', textAlign: 'center' }}>131-81-54702</td>
-                  <td colSpan="1" style={{ border: '1px solid black', borderTop: '2px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>상 호</td>
-                  <td colSpan="2" style={{ border: '1px solid black', borderTop: '2px solid black', borderRight: '2px solid black', padding: '8px', textAlign: 'center' }}>㈜신세계야구단 (대표: 김재섭)</td>
+                  <td colSpan="1" rowSpan="3" style={{ borderTop: '2px solid black', borderBottom: '2px solid black', borderLeft: '2px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center', verticalAlign: 'middle' }}>발행인<br/>(공급자)</td>
+                  <td colSpan="1" style={{ borderTop: '2px solid black', borderBottom: '1px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>등록번호</td>
+                  <td colSpan="1" style={{ borderTop: '2px solid black', borderBottom: '1px solid black', borderRight: '1px solid black', padding: '8px', textAlign: 'center' }}>131-81-54702</td>
+                  <td colSpan="1" style={{ borderTop: '2px solid black', borderBottom: '1px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>상 호</td>
+                  <td colSpan="2" style={{ borderTop: '2px solid black', borderBottom: '1px solid black', borderRight: '2px solid black', padding: '8px', textAlign: 'center' }}>㈜신세계야구단 (대표: 김재섭)</td>
                 </tr>
                 <tr>
-                  <td colSpan="1" style={{ border: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>사업장주소</td>
-                  <td colSpan="5" style={{ border: '1px solid black', borderRight: '2px solid black', padding: '8px', textAlign: 'center' }}>인천광역시 미추홀구 매소홀로 618</td>
+                  <td colSpan="1" style={{ borderBottom: '1px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>사업장주소</td>
+                  <td colSpan="4" style={{ borderBottom: '1px solid black', borderRight: '2px solid black', padding: '8px', textAlign: 'center' }}>인천광역시 미추홀구 매소홀로 618</td>
                 </tr>
                 <tr>
-                  <td colSpan="1" style={{ border: '1px solid black', borderBottom: '2px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>전 화</td>
-                  <td colSpan="2" style={{ border: '1px solid black', borderBottom: '2px solid black', padding: '8px', textAlign: 'center' }}>032)455-2620</td>
-                  <td colSpan="1" style={{ border: '1px solid black', borderBottom: '2px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>팩 스</td>
-                  <td colSpan="2" style={{ border: '1px solid black', borderBottom: '2px solid black', borderRight: '2px solid black', padding: '8px', textAlign: 'center' }}>032)455-2699</td>
+                  <td colSpan="1" style={{ borderBottom: '2px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>전 화</td>
+                  <td colSpan="1" style={{ borderBottom: '2px solid black', borderRight: '1px solid black', padding: '8px', textAlign: 'center' }}>032)455-2620</td>
+                  <td colSpan="1" style={{ borderBottom: '2px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>팩 스</td>
+                  <td colSpan="2" style={{ borderBottom: '2px solid black', borderRight: '2px solid black', padding: '8px', textAlign: 'center' }}>032)455-2699</td>
                 </tr>
-                <tr><td colSpan="8" style={{ height: '15px', border: 'none' }}></td></tr>
+                <tr><td colSpan="6" style={{ height: '15px', border: 'none' }}></td></tr>
                 
-                {/* 3. 합계 (VAT 포함) 금액 중앙 정렬 */}
+                {/* 5. 합계 (VAT 포함) : 테두리 2px, 정중앙 정렬 */}
                 <tr>
                   <td colSpan="2" style={{ border: '2px solid black', borderRight: '1px solid black', padding: '12px', fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f2f2f2' }}>합 계 (VAT 포함)</td>
-                  <td colSpan="6" style={{ border: '2px solid black', borderLeft: '1px solid black', padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '14pt' }}>
+                  <td colSpan="4" style={{ border: '2px solid black', borderLeft: '1px solid black', padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '14pt' }}>
                     일금 {numberToKorean(fees.grandTotal)}원 정 (₩{formatCurrency(fees.grandTotal)})
                   </td>
                 </tr>
-                <tr><td colSpan="8" style={{ height: '10px', border: 'none' }}></td></tr>
+                <tr><td colSpan="6" style={{ height: '10px', border: 'none' }}></td></tr>
                 
-                {/* 4. 항목 리스트 표 헤더 */}
+                {/* 6. 항목 리스트 표 헤더 (1px 얇은 선) */}
                 <tr style={{ backgroundColor: '#f2f2f2' }}>
-                  <th colSpan="2" style={{ borderTop: '2px solid black', borderBottom: '1px solid black', borderLeft: '2px solid black', borderRight: '1px solid black', padding: '10px' }}>항 목</th>
-                  <th colSpan="2" style={{ borderTop: '2px solid black', borderBottom: '1px solid black', borderLeft: '1px solid black', borderRight: '1px solid black', padding: '10px' }}>단 가</th>
-                  <th colSpan="1" style={{ borderTop: '2px solid black', borderBottom: '1px solid black', borderLeft: '1px solid black', borderRight: '1px solid black', padding: '10px' }}>수 량</th>
-                  <th colSpan="2" style={{ borderTop: '2px solid black', borderBottom: '1px solid black', borderLeft: '1px solid black', borderRight: '1px solid black', padding: '10px' }}>금 액 (원)</th>
-                  <th colSpan="1" style={{ borderTop: '2px solid black', borderBottom: '1px solid black', borderLeft: '1px solid black', borderRight: '2px solid black', padding: '10px' }}>비 고</th>
+                  <th colSpan="2" style={{ border: '1px solid black', padding: '10px' }}>항 목</th>
+                  <th colSpan="1" style={{ border: '1px solid black', padding: '10px' }}>단 가</th>
+                  <th colSpan="1" style={{ border: '1px solid black', padding: '10px' }}>수 량</th>
+                  <th colSpan="1" style={{ border: '1px solid black', padding: '10px' }}>금 액 (원)</th>
+                  <th colSpan="1" style={{ border: '1px solid black', padding: '10px' }}>비 고</th>
                 </tr>
                 
-                {/* 5. 각 파트별 렌더링 (a, b, c, d 소계 적용) */}
+                {/* 7. 각 파트별 렌더링 (a, b, c, d 소계 적용) */}
                 {fees.itemsA.map((item, idx) => renderExcelRow(item.name, item.unitText, item.qtyText, item.total, item.note))}
                 {fees.itemsA.length === 0 && renderExcelRow('전용사용료', '-', '-', 0, '')}
                 {renderExcelRow('전용사용료 소계 (a)', '', '', fees.feeA, '', true)}
@@ -776,11 +792,11 @@
                 {fees.itemsD.length === 0 && renderExcelRow('시설복구비', '-', '-', 0, '')}
                 {renderExcelRow('시설복구비 (d)', '', '', fees.feeD, '', true)}
                 
-                {/* 6. 최하단 총 합계 행 */}
+                {/* 8. 최하단 총 합계 행 */}
                 <tr>
-                  <th colSpan="5" style={{ borderTop: '1px solid black', borderBottom: '2px solid black', borderLeft: '2px solid black', borderRight: '1px solid black', padding: '10px', textAlign: 'center', backgroundColor: '#f2f2f2' }}>총 합 계 (a+b+c+d)</th>
-                  <td colSpan="2" style={{ borderTop: '1px solid black', borderBottom: '2px solid black', borderLeft: '1px solid black', borderRight: '1px solid black', padding: '10px', textAlign: 'right', fontWeight: 'bold', backgroundColor: '#f2f2f2', msoNumberFormat: '\\#\\,\\#\\#0' }}>{formatCurrency(fees.grandTotal)}</td>
-                  <td colSpan="1" style={{ borderTop: '1px solid black', borderBottom: '2px solid black', borderLeft: '1px solid black', borderRight: '2px solid black', padding: '10px', backgroundColor: '#f2f2f2' }}></td>
+                  <th colSpan="4" style={{ border: '1px solid black', padding: '10px', textAlign: 'center', backgroundColor: '#f2f2f2' }}>총 합 계 (a+b+c+d)</th>
+                  <td colSpan="1" style={{ border: '1px solid black', padding: '10px', textAlign: 'right', fontWeight: 'bold', backgroundColor: '#f2f2f2', msoNumberFormat: '\\#\\,\\#\\#0' }}>{formatCurrency(fees.grandTotal)}</td>
+                  <td colSpan="1" style={{ border: '1px solid black', padding: '10px', backgroundColor: '#f2f2f2' }}></td>
                 </tr>
               </tbody>
             </table>
@@ -1007,7 +1023,18 @@
 
 
                       {/* --- 부속시설 사용료 체크 및 입력란 --- */}
-                      <div className="md:col-span-2 border-t pt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                      <div className="md:col-span-2 border-t pt-6 grid grid-cols-1 lg:grid-cols-4 gap-4">
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                          <label className="flex items-center gap-2 cursor-pointer mb-2">
+                            <input type="checkbox" className="rounded text-blue-600 w-4 h-4" checked={formCommercialUsage} onChange={e => setFormCommercialUsage(e.target.checked)}/>
+                            <span className="font-semibold text-sm text-gray-700">상업 사용료 (1,400원/㎡)</span>
+                          </label>
+                          {formCommercialUsage && (
+                            <input type="number" placeholder="사용 면적(㎡)" className="w-full p-2 text-sm border border-gray-300 rounded" value={formCommercialArea} onChange={e => setFormCommercialArea(e.target.value)}/>
+                          )}
+                        </div>
+
+
                         <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                           <label className="flex items-center gap-2 cursor-pointer mb-2">
                             <input type="checkbox" className="rounded text-blue-600 w-4 h-4" checked={formFacUsage} onChange={e => setFormFacUsage(e.target.checked)}/>
@@ -1028,7 +1055,7 @@
                             <span className="font-semibold text-sm text-gray-700">부속시설 (상하수도 요금)</span>
                           </label>
                           {formWaterUsage && (
-                            <input type="number" placeholder="사용 면적(㎡)" className="w-full p-2 text-sm border border-gray-300 rounded" value={formWaterArea} onChange={e => setFormWaterArea(e.target.value)}/>
+                            <input type="number" placeholder="금액 직접 입력 (원)" className="w-full p-2 text-sm border border-gray-300 rounded" value={formWaterAmount} onChange={e => setFormWaterAmount(e.target.value)}/>
                           )}
                         </div>
 
@@ -1039,7 +1066,7 @@
                             <span className="font-semibold text-sm text-gray-700">부속시설 (전기사용료)</span>
                           </label>
                           {formElecUsage && (
-                            <input type="number" placeholder="사용 면적(㎡)" className="w-full p-2 text-sm border border-gray-300 rounded" value={formElecArea} onChange={e => setFormElecArea(e.target.value)}/>
+                            <input type="number" placeholder="금액 직접 입력 (원)" className="w-full p-2 text-sm border border-gray-300 rounded" value={formElecAmount} onChange={e => setFormElecAmount(e.target.value)}/>
                           )}
                         </div>
                       </div>
@@ -1090,7 +1117,7 @@
                     <p className="text-sm text-gray-500 mt-1">대관 건을 클릭하여 선택한 후, 우측의 문서 작성 버튼을 이용하세요.</p>
                   </div>
                   <div className="flex gap-3">
-                    <button onClick={() => openDoc('word')} className="flex items-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 px-4 py-2 rounded-lg font-semibold hover:bg-blue-100"><FileText className="w-5 h-5" /> 수신 공문 작성</button>
+                    <button onClick={() => openDoc('word')} className="flex items-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 px-4 py-2 rounded-lg font-semibold hover:bg-blue-100"><FileText className="w-5 h-5" /> 공문 작성</button>
                     <button onClick={() => openDoc('excel')} className="flex items-center gap-2 bg-green-50 text-green-700 border border-green-200 px-4 py-2 rounded-lg font-semibold hover:bg-green-100"><FileSpreadsheet className="w-5 h-5" /> 견적서 작성</button>
                   </div>
                 </div>
