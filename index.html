@@ -146,9 +146,9 @@
               img.src = getBase64Image(originalImg); 
               
               // 워드에서 이미지가 원본 해상도(매우 큼)로 출력되는 문제 방지
-              // 표시되는 크기만 35px 로 강제 지정
+              // 표시되는 크기만 40px 로 강제 지정
               if (img.id === 'ssg-logo') {
-                const targetHeight = 35; 
+                const targetHeight = 40; 
                 const ratio = (originalImg.naturalWidth || 150) / (originalImg.naturalHeight || 90);
                 img.setAttribute('height', targetHeight);
                 img.setAttribute('width', Math.round(targetHeight * ratio));
@@ -474,7 +474,7 @@
                 <tr>
                   <td align="center" style={{ padding: 0 }}>
                     <p style={{ margin: 0, padding: 0, textAlign: 'center' }}>
-                      <img id="ssg-logo" src="./wordmark_02.jpg" alt="SSG LANDERS" crossOrigin="anonymous" style={{ height: '35px', objectFit: 'contain' }} />
+                      <img id="ssg-logo" src="./wordmark_02.jpg" alt="SSG LANDERS" crossOrigin="anonymous" style={{ height: '40px', objectFit: 'contain' }} />
                     </p>
                   </td>
                 </tr>
