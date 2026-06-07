@@ -460,6 +460,79 @@
         setDocModal({ isOpen: true, type, rental: selectedRental });
       };
 
+      // --- 대관 실적 엑셀 다운로드 함수 ---
+      const downloadPerformanceExcel = () => {
+        if (rentals.length === 0) {
+          return alert('다운로드할 대관 일정이 없습니다.');
+        }
+
+        // 엑셀 변환을 위한 HTML 템플릿 생성
+        let tableHtml = `
+          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+          <head>
+            <meta charset="utf-8">
+            <style>
+              table { border-collapse: collapse; width: 100%; font-family: 'Malgun Gothic', sans-serif; }
+              th, td { border: 1px solid black; padding: 8px; text-align: center; }
+              th { background-color: #dbeafe; font-weight: bold; }
+              .title-cell { text-align: left; }
+              .amount-cell { text-align: right; mso-number-format: "\\#\\,\\#\\#0"; } /* 엑셀 콤마 포맷 */
+            </style>
+          </head>
+          <body>
+            <table>
+              <thead>
+                <tr>
+                  <th colspan="4" style="font-size: 16pt; padding: 15px; border: none; text-align: center;">대관 일정 전체 실적 현황</th>
+                </tr>
+                <tr>
+                  <th>대관명 (분류)</th>
+                  <th>대관날짜</th>
+                  <th>사용인원(명)</th>
+                  <th>최종 금액(원)</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        // 데이터를 순회하며 표 행(Row) 생성
+        rentals.forEach(r => {
+          const fees = calculateFees(r); 
+          
+          const dateStr = r.dates.map(d => r.dateType === '기간' ? `${d.date} ~ ${d.endDate}` : d.date).join(', ');
+          const headcountStr = r.headcount ? `${r.headcount}` : '-';
+
+          tableHtml += `
+            <tr>
+              <td class="title-cell">${r.title} <span style="color:#666; font-size:12px;">(${r.category})</span></td>
+              <td>${dateStr}</td>
+              <td>${headcountStr}</td>
+              <td class="amount-cell">${fees.grandTotal}</td>
+            </tr>
+          `;
+        });
+
+        tableHtml += `
+              </tbody>
+            </table>
+          </body>
+          </html>
+        `;
+
+        // Blob을 이용해 가상 파일 생성 및 다운로드 트리거
+        const blob = new Blob(['\ufeff', tableHtml], { type: 'application/vnd.ms-excel' });
+        const url = URL.createObjectURL(blob);
+        const downloadLink = document.createElement("a");
+        
+        const todayStr = getTodayFormatted('excel').replace(/\./g, '').trim(); 
+        downloadLink.href = url;
+        downloadLink.download = `대관실적_${todayStr}.xls`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        URL.revokeObjectURL(url);
+      };
+
       // --- 공문 (Word) 렌더러 ---
       const renderWordTemplate = (r, fees) => {
         const isPromo = r.category === '프로모션';
@@ -810,6 +883,9 @@
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold flex items-center gap-2"><CalendarIcon className="w-5 h-5 text-blue-600" /> {year}년 {month + 1}월 대관 현황</h2>
               <div className="flex gap-2">
+                <button type="button" onClick={downloadPerformanceExcel} className="flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded font-semibold hover:bg-green-100 mr-2">
+                  <Download className="w-4 h-4" /> 실적 다운로드
+                </button>
                 <button type="button" onClick={() => setCurrentDate(new Date(year, month - 1, 1))} className="px-3 py-1 border rounded hover:bg-gray-50">&lt;</button>
                 <button type="button" onClick={() => setCurrentDate(new Date())} className="px-3 py-1 border rounded hover:bg-gray-50">오늘</button>
                 <button type="button" onClick={() => setCurrentDate(new Date(year, month + 1, 1))} className="px-3 py-1 border rounded hover:bg-gray-50">&gt;</button>
