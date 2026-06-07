@@ -53,6 +53,7 @@
     const X = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
     const Printer = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>;
     const Download = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>;
+    const Edit = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>;
 
     // --- 요금 산정 상수 ---
     const STADIUM_PRICES = {
@@ -78,7 +79,6 @@
       }
     };
 
-    const RESTORATION_FEE_PER_DAY = 550000;
     const UNIT_PRICE_FAC_ROOM_HOUR = 10000;
 
     const formatCurrency = (num) => Math.round(num).toLocaleString('ko-KR');
@@ -123,15 +123,12 @@
       const element = document.getElementById(elementId);
       if (!element) return;
 
-      // 이미지 고화질 유지 (원본 해상도를 그대로 캔버스에 그리기)
       const getBase64Image = (img) => {
         const canvas = document.createElement("canvas");
-        // 원본 픽셀 데이터 보존
         canvas.width = img.naturalWidth || img.width || 150;
         canvas.height = img.naturalHeight || img.height || 90;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        // 무손실 png로 변환
         return canvas.toDataURL("image/png");
       };
       
@@ -144,9 +141,6 @@
         if(originalImg && originalImg.complete) {
             try { 
               img.src = getBase64Image(originalImg); 
-              
-              // 워드에서 이미지가 원본 해상도(매우 큼)로 출력되는 문제 방지
-              // 표시되는 크기만 80px 로 강제 지정
               if (img.id === 'ssg-logo') {
                 const targetHeight = 80; 
                 const ratio = (originalImg.naturalWidth || 150) / (originalImg.naturalHeight || 90);
@@ -196,6 +190,9 @@
       const [rentals, setRentals] = useState([]);
       const [selectedRental, setSelectedRental] = useState(null);
       const [docModal, setDocModal] = useState({ isOpen: false, type: '', rental: null });
+      
+      const [actionModal, setActionModal] = useState({ isOpen: false, rental: null });
+      const [editModeId, setEditModeId] = useState(null);
 
       const [formCategory, setFormCategory] = useState('경기장 대관');
       const [formTitle, setFormTitle] = useState('');
@@ -207,6 +204,7 @@
       const [formPaymentDeadline, setFormPaymentDeadline] = useState('');
       const [formRecipient, setFormRecipient] = useState('');
       const [formRestoration, setFormRestoration] = useState(false);
+      const [formRestorationAmount, setFormRestorationAmount] = useState('');
 
       const [formCommercialUsage, setFormCommercialUsage] = useState(false);
       const [formCommercialArea, setFormCommercialArea] = useState('');
@@ -238,6 +236,24 @@
         return () => unsubscribe();
       }, []);
 
+      const resetForm = () => {
+        setEditModeId(null);
+        setFormCategory('경기장 대관');
+        setFormTitle('');
+        setFormPurposeType('체육경기 외');
+        setFormDateType('개별');
+        setFormDates([{ date: '', endDate: '', location: '문학 주육상장', area: '', time: '조기 (06:00~09:00)', days: 1 }]);
+        setFormHeadcount('');
+        setFormPaymentDeadline('');
+        setFormRecipient('');
+        setFormRestoration(false);
+        setFormRestorationAmount('');
+        setFormCommercialUsage(false); setFormCommercialArea('');
+        setFormFacUsage(false); setFormFacRooms(''); setFormFacHours('');
+        setFormWaterUsage(false); setFormWaterAmount('');
+        setFormElecUsage(false); setFormElecAmount('');
+      };
+
       const addDateRow = () => {
         if (formDates.length < 10) setFormDates([...formDates, { date: '', endDate: '', location: '문학 주육상장', area: '', time: '조기 (06:00~09:00)', days: 1 }]);
         else alert('개별 날짜는 최대 10개까지 추가할 수 있습니다.');
@@ -255,51 +271,108 @@
 
       const handleRegister = (e) => {
         e.preventDefault();
-        if (!formTitle || !formPaymentDeadline || !formRecipient) return alert('필수 항목을 모두 입력해주세요.');
-        
-        if ((formCategory === '경기장 대관' || formCategory === '공연 대관') && !formHeadcount) {
-          return alert('사용 인원을 필수로 입력해주세요.');
+        const isBaseball = formCategory === '야구단행사';
+
+        if (!formTitle) return alert('대관 명(제목)을 입력해주세요.');
+
+        if (!isBaseball) {
+          if (!formPaymentDeadline || !formRecipient) return alert('필수 항목을 모두 입력해주세요.');
+          if ((formCategory === '경기장 대관' || formCategory === '공연 대관') && !formHeadcount) {
+            return alert('사용 인원을 필수로 입력해주세요.');
+          }
+          if (formRestoration && !formRestorationAmount) {
+            return alert('복구비 회당 금액을 입력해주세요.');
+          }
         }
         
-        const newRental = {
+        const rentalData = {
           category: formCategory, 
           title: formTitle, 
-          purposeType: formPurposeType, 
+          purposeType: isBaseball ? '' : formPurposeType, 
           dateType: formDateType, 
           dates: [...formDates], 
-          paymentDeadline: formPaymentDeadline, 
-          recipient: formRecipient, 
-          restorationFee: formRestoration, 
-          commercialUsage: formCommercialUsage, commercialArea: formCommercialArea,
-          facUsage: formFacUsage, facRooms: formFacRooms, facHours: formFacHours,
-          waterUsage: formWaterUsage, waterAmount: formWaterAmount,
-          elecUsage: formElecUsage, elecAmount: formElecAmount,
-          paymentDate: '', docsReceived: false, docsSent: false, suspenseReceipt: false, taxInvoice: false, incomeResolution: false, allComplete: false, 
-          createdAt: Date.now(),
-          headcount: (formCategory === '경기장 대관' || formCategory === '공연 대관') ? formHeadcount : null
+          paymentDeadline: isBaseball ? '' : formPaymentDeadline, 
+          recipient: isBaseball ? '' : formRecipient, 
+          restorationFee: isBaseball ? false : formRestoration, 
+          restorationAmount: isBaseball ? '' : formRestorationAmount,
+          commercialUsage: isBaseball ? false : formCommercialUsage, 
+          commercialArea: isBaseball ? '' : formCommercialArea,
+          facUsage: isBaseball ? false : formFacUsage, 
+          facRooms: isBaseball ? '' : formFacRooms, 
+          facHours: isBaseball ? '' : formFacHours,
+          waterUsage: isBaseball ? false : formWaterUsage, 
+          waterAmount: isBaseball ? '' : formWaterAmount,
+          elecUsage: isBaseball ? false : formElecUsage, 
+          elecAmount: isBaseball ? '' : formElecAmount,
+          headcount: (formCategory === '경기장 대관' || formCategory === '공연 대관' || isBaseball) ? formHeadcount : null
         };
 
-        db.collection('rentals').add(newRental).then(() => {
-          alert('대관 일정이 등록되었습니다.');
-          setFormTitle(''); setFormPaymentDeadline(''); setFormRecipient(''); setFormRestoration(false); setFormHeadcount('');
-          setFormCommercialUsage(false); setFormCommercialArea('');
-          setFormFacUsage(false); setFormFacRooms(''); setFormFacHours('');
-          setFormWaterUsage(false); setFormWaterAmount('');
-          setFormElecUsage(false); setFormElecAmount('');
-          setFormDates([{ date: '', endDate: '', location: '문학 주육상장', area: '', time: '조기 (06:00~09:00)', days: 1 }]);
-        }).catch(err => alert("등록 중 오류가 발생했습니다: " + err.message));
+        if (editModeId) {
+          db.collection('rentals').doc(editModeId).update(rentalData).then(() => {
+            alert('대관 일정이 수정되었습니다.');
+            resetForm();
+          }).catch(err => alert("수정 중 오류가 발생했습니다: " + err.message));
+        } else {
+          rentalData.paymentDate = ''; 
+          rentalData.docsReceived = false; 
+          rentalData.docsSent = false; 
+          rentalData.suspenseReceipt = false; 
+          rentalData.taxInvoice = false; 
+          rentalData.incomeResolution = false; 
+          rentalData.allComplete = false; 
+          rentalData.createdAt = Date.now();
+
+          db.collection('rentals').add(rentalData).then(() => {
+            alert('대관 일정이 등록되었습니다.');
+            resetForm();
+          }).catch(err => alert("등록 중 오류가 발생했습니다: " + err.message));
+        }
+      };
+
+      const handleActionClick = (rental) => {
+        setActionModal({ isOpen: true, rental });
+      };
+
+      const handleEdit = (rental) => {
+        setEditModeId(rental.id);
+        setFormCategory(rental.category);
+        setFormTitle(rental.title);
+        setFormPurposeType(rental.purposeType || '체육경기 외');
+        setFormDateType(rental.dateType || '개별');
+        setFormDates([...rental.dates]);
+        setFormHeadcount(rental.headcount || '');
+        setFormPaymentDeadline(rental.paymentDeadline || '');
+        setFormRecipient(rental.recipient || '');
+        setFormRestoration(rental.restorationFee || false);
+        setFormRestorationAmount(rental.restorationAmount || '');
+        setFormCommercialUsage(rental.commercialUsage || false);
+        setFormCommercialArea(rental.commercialArea || '');
+        setFormFacUsage(rental.facUsage || false);
+        setFormFacRooms(rental.facRooms || '');
+        setFormFacHours(rental.facHours || '');
+        setFormWaterUsage(rental.waterUsage || false);
+        setFormWaterAmount(rental.waterAmount || '');
+        setFormElecUsage(rental.elecUsage || false);
+        setFormElecAmount(rental.elecAmount || '');
+        
+        setActionModal({ isOpen: false, rental: null });
+        setActiveTab('register'); 
+        window.scrollTo({ top: 0, behavior: 'smooth' }); 
       };
 
       const handleDelete = (rental) => {
         if (window.confirm(`'${rental.title}' 대관 일정을 정말 삭제하시겠습니까?\n삭제 시 전체 목록에서도 완전히 사라집니다.`)) {
           db.collection('rentals').doc(rental.id).delete()
-            .then(() => alert('정상적으로 삭제되었습니다.'))
+            .then(() => {
+              alert('정상적으로 삭제되었습니다.');
+              if(editModeId === rental.id) resetForm(); 
+            })
             .catch(err => alert('삭제 실패: ' + err.message));
         }
       };
 
       const startPress = (e, rental) => {
-        pressTimer.current = setTimeout(() => { handleDelete(rental); }, 800);
+        pressTimer.current = setTimeout(() => { handleActionClick(rental); }, 800);
       };
 
       const cancelPress = () => {
@@ -311,25 +384,17 @@
       };
 
       const checkIsAlert = (rental) => {
+        if (rental.category === '야구단행사') return false; 
         const hasPaymentDate = rental.paymentDate && rental.paymentDate.trim() !== '';
         const allCheckboxes = rental.docsReceived && rental.docsSent && rental.suspenseReceipt && rental.taxInvoice && rental.incomeResolution;
         return !(hasPaymentDate && (rental.allComplete || allCheckboxes));
       };
 
-      // --- 소계 a,b,c,d 별 분류 및 10원 단위 미만 절사 로직 ---
+      // --- 소계 계산 함수 ---
       const calculateFees = (rental) => {
-        let itemsA = [];
-        let itemsB = [];
-        let itemsC = [];
-        let itemsD = [];
-
-        let feeA = 0; // 전용사용료 소계
-        let feeB = 0; // 부속시설사용료 소계
-        let feeC = 0; // 기타사용료 소계 (상업)
-        let feeD = 0; // 시설복구비 소계
-
+        let itemsA = []; let itemsB = []; let itemsC = []; let itemsD = [];
+        let feeA = 0; let feeB = 0; let feeC = 0; let feeD = 0;
         let totalDays = 0;
-
         const agg = {};
 
         rental.dates.forEach(d => {
@@ -368,7 +433,7 @@
                   qtyText: `${daysCount}일, ${area}㎡`,
                   total: Math.round(currentBase), note: ''
                 });
-            } else {
+            } else if (rental.category !== '야구단행사') {
                 const times = d.time === '종일 (06:00~23:00)' ? ['조기 (06:00~09:00)', '주간 (09:00~18:00)', '야간 (18:00~23:00)'] : [d.time];
                 times.forEach(t => {
                     const timeLabel = t.split(' ')[0];
@@ -389,7 +454,7 @@
             }
         });
 
-        if (rental.category !== '프로모션') {
+        if (rental.category !== '프로모션' && rental.category !== '야구단행사') {
             Object.values(agg).forEach(g => {
                 const totalItemFee = g.price * g.count;
                 feeA += totalItemFee; 
@@ -403,7 +468,6 @@
             });
         }
 
-        // B: 부속시설사용료 (실/시간, 상하수도, 전기 모두 포함)
         if (rental.facUsage) {
           const amt = (parseInt(rental.facRooms)||0) * (parseInt(rental.facHours)||0) * UNIT_PRICE_FAC_ROOM_HOUR;
           feeB += amt;
@@ -420,7 +484,6 @@
           itemsB.push({ name: '부속시설 (전기사용료)', unitText: '-', qtyText: `1식`, total: amt, note: '' });
         }
 
-        // C: 기타사용료 (상업사용료 단독 적용 가능)
         if (rental.commercialUsage) {
             const area = parseFloat(rental.commercialArea) || 0;
             const commAmt = totalDays * area * 1400;
@@ -431,14 +494,14 @@
             });
         }
 
-        // D: 시설복구비
         if (rental.restorationFee) {
-          const amt = RESTORATION_FEE_PER_DAY * (totalDays > 0 ? totalDays : 1);
+          const customFee = parseInt(rental.restorationAmount) || 0;
+          const usageCount = totalDays > 0 ? totalDays : 1;
+          const amt = customFee * usageCount;
           feeD += amt;
-          itemsD.push({ name: '원상복구 예치금', unitText: `1일<br/>550,000원`, qtyText: `${totalDays > 0 ? totalDays : 1}일`, total: amt, note: '행사 종료 후 반환' });
+          itemsD.push({ name: '원상복구 예치금', unitText: `1회(일)<br/>${formatCurrency(customFee)}원`, qtyText: `${usageCount}회(일)`, total: amt, note: '행사 종료 후 반환' });
         }
 
-        // 10원 단위 미만 절사 (내림)
         feeA = Math.floor(feeA / 10) * 10;
         feeB = Math.floor(feeB / 10) * 10;
         feeC = Math.floor(feeC / 10) * 10;
@@ -446,10 +509,7 @@
         
         let grandTotal = feeA + feeB + feeC + feeD;
 
-        return { 
-          itemsA, itemsB, itemsC, itemsD,
-          feeA, feeB, feeC, feeD, grandTotal
-        };
+        return { itemsA, itemsB, itemsC, itemsD, feeA, feeB, feeC, feeD, grandTotal };
       };
 
       const openDoc = (type) => {
@@ -460,13 +520,11 @@
         setDocModal({ isOpen: true, type, rental: selectedRental });
       };
 
-      // --- 대관 실적 엑셀 다운로드 함수 ---
       const downloadPerformanceExcel = () => {
         if (rentals.length === 0) {
           return alert('다운로드할 대관 일정이 없습니다.');
         }
 
-        // 엑셀 변환을 위한 HTML 템플릿 생성
         let tableHtml = `
           <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
           <head>
@@ -476,7 +534,7 @@
               th, td { border: 1px solid black; padding: 8px; text-align: center; }
               th { background-color: #dbeafe; font-weight: bold; }
               .title-cell { text-align: left; }
-              .amount-cell { text-align: right; mso-number-format: "\\#\\,\\#\\#0"; } /* 엑셀 콤마 포맷 */
+              .amount-cell { text-align: right; mso-number-format: "\\#\\,\\#\\#0"; }
             </style>
           </head>
           <body>
@@ -495,10 +553,8 @@
               <tbody>
         `;
 
-        // 데이터를 순회하며 표 행(Row) 생성
         rentals.forEach(r => {
           const fees = calculateFees(r); 
-          
           const dateStr = r.dates.map(d => r.dateType === '기간' ? `${d.date} ~ ${d.endDate}` : d.date).join(', ');
           const headcountStr = r.headcount ? `${r.headcount}` : '-';
 
@@ -519,7 +575,6 @@
           </html>
         `;
 
-        // Blob을 이용해 가상 파일 생성 및 다운로드 트리거
         const blob = new Blob(['\ufeff', tableHtml], { type: 'application/vnd.ms-excel' });
         const url = URL.createObjectURL(blob);
         const downloadLink = document.createElement("a");
@@ -533,166 +588,169 @@
         URL.revokeObjectURL(url);
       };
 
-      // --- 공문 (Word) 렌더러 ---
+      // --- [수정 완료] Word 템플릿: 첨부해주신 DOCX 문서 양식과 완벽 일치 ---
       const renderWordTemplate = (r, fees) => {
-        const isPromo = r.category === '프로모션';
-        const dateStr = r.dates.map(d => r.dateType === '기간' ? `${d.date}~${d.endDate}` : d.date).join(', ');
+        // 날짜 가공
+        const dateStr = r.dates.map(d => r.dateType === '기간' ? `${d.date} ~ ${d.endDate}` : d.date).join(', ');
         const locStr = Array.from(new Set(r.dates.map(d => getOfficialLocationName(d.location)))).join(', ');
-        const docNumber = Math.floor(Math.random() * 100) + 50;
+        const docNumber = String(Math.floor(Math.random() * 100) + 50).padStart(3, '0');
+        const currentYear = new Date().getFullYear();
+        const todayExcelStr = getTodayFormatted('excel'); // 2026.00.00. 형식
+
+        // 총 대관일 수 계산
+        let totalDays = 0;
+        r.dates.forEach(d => {
+            if (r.dateType === '기간' && d.endDate) {
+                const start = new Date(d.date);
+                const end = new Date(d.endDate);
+                totalDays += Math.max(1, Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1);
+            } else {
+                totalDays += parseInt(d.days) || 1;
+            }
+        });
+
+        // 요일이 포함된 마감 날짜 포맷 (예: 2026년 6월 12일(금))
+        const formatDateStringWithDay = (dateString) => {
+            if(!dateString) return '';
+            const d = new Date(dateString);
+            if (isNaN(d.getTime())) return dateString;
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일(${days[d.getDay()]})`;
+        };
+        const deadlineStr = formatDateStringWithDay(r.paymentDeadline);
 
         return (
-          <div id="export-area" style={{ width: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif", color: 'black' }}>
+          <div id="export-area" style={{ width: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif", color: 'black', fontSize: '11pt', lineHeight: '1.6' }}>
+            
+            {/* 1. 헤더 (로고 & 발신 정보) */}
             <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ borderCollapse: 'collapse', border: 'none' }}>
               <tbody>
                 <tr>
                   <td align="center" style={{ padding: 0 }}>
                     <p style={{ margin: 0, padding: 0, textAlign: 'center' }}>
-                      <img id="ssg-logo" src="./wordmark_02.jpg" alt="SSG LANDERS" crossOrigin="anonymous" style={{ height: '80px', objectFit: 'contain' }} />
+                      <img id="ssg-logo" src="./wordmark_02.jpg" alt="SSG LANDERS" crossOrigin="anonymous" style={{ height: '75px', objectFit: 'contain' }} />
                     </p>
                   </td>
                 </tr>
                 <tr>
-                  <td align="center" style={{ padding: '2px 0 10px 0', borderBottom: '1px solid black' }}>
-                    <p style={{ margin: 0, padding: 0, textAlign: 'center', fontSize: '9pt', color: '#555', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
-                      우22234/인천광역시 미추홀구 매소홀로 618/시설안전관리팀/김효원/T 032-455-2620/F 032-455-2699
+                  <td align="center" style={{ padding: '5px 0 15px 0', borderBottom: '1px solid black' }}>
+                    <p style={{ margin: 0, padding: 0, textAlign: 'center', fontSize: '9.5pt', color: '#000' }}>
+                      우22234 인천광역시 미추홀구 매소홀로 618 / 시설안전관리팀 김효원 T.032-455-2620 / F.032-455-2699
                     </p>
                   </td>
                 </tr>
               </tbody>
             </table>
 
-            <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ borderCollapse: 'collapse', border: 'none', marginTop: '15px' }}>
+            {/* 2. 문서 정보 (문서번호, 수신, 발신, 제목) */}
+            <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ borderCollapse: 'collapse', border: 'none', marginTop: '15px', fontSize: '11pt' }}>
               <tbody>
                 <tr>
-                  <td width="50%" align="left" style={{ padding: 0 }}>
-                    <p style={{ margin: 0, padding: 0, fontSize: '12pt', fontWeight: 'normal', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>SSG랜더스 – 문학{String(docNumber).padStart(3, '0')}호</p>
-                  </td>
-                  <td width="50%" align="right" style={{ padding: 0 }}>
-                    <p style={{ margin: 0, padding: 0, fontSize: '12pt', fontWeight: 'normal', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>{getTodayFormatted()}</p>
-                  </td>
+                  <td width="70" align="left" style={{ padding: '3px 0' }}>문서번호</td>
+                  <td width="15" align="center">:</td>
+                  <td align="left">SSG랜더스 – 제{currentYear}-{docNumber} 호</td>
+                  <td align="right" width="120">{todayExcelStr}</td>
+                </tr>
+                <tr>
+                  <td align="left" style={{ padding: '3px 0' }}>수&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;신</td>
+                  <td align="center">:</td>
+                  <td colSpan="2" align="left">{r.recipient} 대표이사</td>
+                </tr>
+                <tr>
+                  <td align="left" style={{ padding: '3px 0' }}>발&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;신</td>
+                  <td align="center">:</td>
+                  <td colSpan="2" align="left">㈜신세계야구단</td>
+                </tr>
+                <tr>
+                  <td align="left" style={{ padding: '3px 0' }}>제&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;목</td>
+                  <td align="center">:</td>
+                  <td colSpan="2" align="left"><b>문학경기장 사용허가 신청에 대한 조건부 허가 통보의 건</b></td>
                 </tr>
               </tbody>
             </table>
 
-            <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ borderCollapse: 'collapse', border: 'none', marginTop: '10px' }}>
-              <tbody>
+            {/* 3. 본문 텍스트 */}
+            <div style={{ marginTop: '25px' }}>
+              <p style={{ margin: '0 0 10px 0', padding: 0 }}>귀 사의 무궁한 발전을 기원합니다.</p>
+              
+              <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt' }}>
                 <tr>
-                  <td width="60" align="left" style={{ padding: 0 }}>
-                    <p style={{ margin: 0, padding: 0, fontSize: '12pt', fontWeight: 'normal', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>수 신 :</p>
-                  </td>
-                  <td align="left" style={{ padding: 0 }}>
-                    <p style={{ margin: 0, padding: 0, fontSize: '12pt', fontWeight: 'normal', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>{r.recipient.trim()}{isPromo ? ' 대표이사' : ''}</p>
-                  </td>
+                  <td width="65" valign="top">관련근거</td>
+                  <td width="20" valign="top">가.</td>
+                  <td>『인천광역시 시립체육시설 관리 운영 조례』 제3조(사용허가), 제16조(사용허가 취소 및 정지)</td>
                 </tr>
                 <tr>
-                  <td width="60" align="left" style={{ padding: 0 }}>
-                    <p style={{ margin: 0, padding: 0, fontSize: '12pt', fontWeight: 'normal', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>참 조 :</p>
-                  </td>
-                  <td align="left" style={{ padding: 0 }}>
-                    <p style={{ margin: 0, padding: 0, fontSize: '12pt', fontWeight: 'normal', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>관련업무 담당자</p>
-                  </td>
+                  <td></td>
+                  <td valign="top">나.</td>
+                  <td>문학경기장 대관 허가조건 및 유의사항</td>
                 </tr>
-                <tr>
-                  <td width="60" align="left" style={{ padding: '0 0 10px 0', borderBottom: '1px solid black' }}>
-                    <p style={{ margin: 0, padding: 0, fontSize: '12pt', fontWeight: 'normal', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>제 목 :</p>
-                  </td>
-                  <td align="left" style={{ padding: '0 0 10px 0', borderBottom: '1px solid black' }}>
-                    <p style={{ margin: 0, padding: 0, fontSize: '12pt', fontWeight: 'normal', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
-                      {isPromo ? `프로모션(${r.title.trim()}) 인천SSG랜더스필드 조건부 대관 허가 알림` : `(${r.recipient.trim()} ${new Date().getFullYear() % 100}년 ${new Date().getMonth()+1}월) 문학경기장 조건부 대관 허가 알림`}
-                    </p>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+              </table>
 
-            <div style={{ marginTop: '15px' }}>
-              <p style={{ margin: 0, padding: 0, paddingLeft: '15px', fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
-                1. 귀 사의 발전을 기원합니다.
-              </p>
-              <p style={{ margin: 0, padding: 0, paddingLeft: '15px', fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
-                2. {isPromo ? '인천SSG랜더스필드 대관 사용을' : '요청하신 대관 신청에 대해'} 아래와 같이 조건부 허가함을 알려드립니다.
-              </p>
-              <p style={{ margin: 0, padding: 0, paddingLeft: '15px', fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
-                3. 대관 사용 시 안전관리{isPromo ? ' 예방 및 공유재산' : ' 및 공공체육시설'} 보존에 유의하여 주시기 바랍니다.
+              <p style={{ margin: '15px 0 20px 0', padding: 0, lineHeight: '1.6' }}>
+                귀 사에서 신청한 문학경기장 사용허가 요청에 대하여 아래와 같이 조건부로 허가하오니, 행사 진행 시 안전사고 예방과 시설물 보호 및 공유재산 보존에 만전을 기하여 주시기 바랍니다.
               </p>
               
-              {/* 스페이스바 4번(&nbsp; 4개) */}
-              <p style={{ margin: 0, padding: 0, paddingLeft: '30px', fontSize: '8pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif", paddingTop: '3px' }}>
-                &nbsp;&nbsp;&nbsp;&nbsp;*첨부 문학경기장 대관 허가조건 및 유의사항 참고
+              <p style={{ margin: '20px 0', textAlign: 'center', fontWeight: 'normal' }}>
+                - 아&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;래 -
               </p>
 
-              {/* "- 아       래 -" (가운데 7칸 공백 적용) */}
-              <p style={{ margin: 0, padding: '15px 0', textAlign: 'center', fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
-                - 아&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;래 -
-              </p>
-
-              <div style={{ paddingLeft: '15px' }}>
-                {/* 가/나/다 앞 스페이스바 4번 */}
-                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
-                  &nbsp;&nbsp;&nbsp;&nbsp;가. {isPromo ? '대관 허가 개요' : `사용목적 : ${r.title.trim()}`}
-                </p>
-                {isPromo && (
-                  <div style={{ paddingLeft: '20px' }}>
-                    {/* - 앞 스페이스바 5번 */}
-                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 사용목적 : 프로모션({r.title.trim()})</p>
-                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 허가기간 : {dateStr}</p>
-                    <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 허가장소 : {locStr}</p>
-                  </div>
-                )}
-
-                <p style={{ margin: 0, padding: 0, paddingTop: '5px', fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
-                  &nbsp;&nbsp;&nbsp;&nbsp;나. {isPromo ? '대관료 납부 안내' : '허가기간 및 허가장소'}
-                </p>
-                <div style={{ paddingLeft: '20px' }}>
-                  {isPromo ? (
-                    <React.Fragment>
-                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 대관료 : {formatCurrency(fees.grandTotal)}원 (부가세 포함)</p>
-                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 납부기한 : {r.paymentDeadline} 17시</p>
-                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 납부계좌 : 신한은행 100-029-560532 (예금주 : 주식회사 신세계야구단)</p>
-                    </React.Fragment>
-                  ) : (
-                    r.dates.map((d, idx) => {
-                      const dateTxt = r.dateType === '기간' ? `${d.date}~${d.endDate}` : d.date;
-                      return <p key={idx} style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- {dateTxt} / {getOfficialLocationName(d.location)} ({d.time})</p>
-                    })
-                  )}
+              {/* 4. 세부 항목 (1. 2. 3.) */}
+              <div style={{ paddingLeft: '5px' }}>
+                <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>1. 사용허가 개요</p>
+                <div style={{ paddingLeft: '15px', marginBottom: '15px' }}>
+                  <p style={{ margin: '2px 0' }}>1) 사용목적 : {r.title}</p>
+                  <p style={{ margin: '2px 0' }}>2) 허가기간 : {dateStr}(총{totalDays}일)</p>
+                  <p style={{ margin: '2px 0' }}>3) 허가장소 : {locStr}</p>
                 </div>
 
-                <p style={{ margin: 0, padding: 0, paddingTop: '5px', fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>
-                  &nbsp;&nbsp;&nbsp;&nbsp;다. {isPromo ? '대관 허가 조건' : '대관 조건'}
-                </p>
-                <div style={{ paddingLeft: '20px' }}>
-                  {!isPromo && (
-                    <React.Fragment>
-                      <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 대관료 기한 내 납부 : {formatCurrency(fees.grandTotal)}원</p>
-                      <p style={{ margin: 0, padding: 0, fontSize: '8pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*기한 : {r.paymentDeadline} 17시 / 계좌 : 신한 100-029-560532 ㈜신세계야구단</p>
-                    </React.Fragment>
-                  )}
-                  {isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 대관료 기한 내 납부</p>}
-                  <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- {isPromo ? '근무자 및 참가자에 대한 안전관리' : '안전관리 : ①관계자/참가자 안전 확보 ②보험 가입'}</p>
-                  {!isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 시설보존 : ①시설 원형 보존 ②사후 청소 ③시설 훼손 시 원상복구 이행</p>}
-                  {isPromo && <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- (필요 시) 인허가 절차 및 관련 법령 준수</p>}
+                <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>2. 대관료 납부 안내</p>
+                <div style={{ paddingLeft: '15px', marginBottom: '15px' }}>
+                  <p style={{ margin: '2px 0' }}>1) 대 관 료 : 금{formatCurrency(fees.grandTotal)}원({numberToKorean(fees.grandTotal)}원, 부가세 포함)</p>
+                  <p style={{ margin: '2px 0' }}>2) 납부기한 : {deadlineStr} 17:00까지</p>
+                  <p style={{ margin: '2px 0' }}>3) 납부계좌 : 신한은행 100-029-560532(예금주 : 주식회사 신세계야구단)</p>
+                  <p style={{ margin: '3px 0', fontSize: '10.5pt' }}>※ 납부기한 내 대관료를 납부하지 않을 경우 사용허가가 취소될 수 있음</p>
+                </div>
+
+                <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>3. 사용허가 조건</p>
+                <div style={{ paddingLeft: '15px', marginBottom: '20px' }}>
+                  <p style={{ margin: '2px 0' }}>1) 문학경기장 대관 허가조건 및 유의사항을 준수할 것</p>
+                  <p style={{ margin: '2px 0' }}>2) 행사 종료 후 발생한 쓰레기 수거 및 원상복구 의무를 이행할 것</p>
                 </div>
               </div>
 
-              {/* 첨부 앞 스페이스바 4번 */}
-              <div style={{ marginLeft: '15px', marginTop: '15px' }}>
-                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;첨부</p>
-                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;1. 문학경기장 대관 사용 견적서</p>
-                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;2. 문학경기장 대관 허가조건 및 유의사항</p>
-                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;3. 사업자등록증(주식회사 신세계야구단)</p>
-                <p style={{ margin: 0, padding: 0, fontSize: '11pt', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>&nbsp;&nbsp;&nbsp;&nbsp;4. 통장 사본(주식회사 신세계야구단). “끝”</p>
-              </div>
+              {/* 5. 첨부 파일 안내 */}
+              <table border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', marginTop: '10px' }}>
+                <tr>
+                  <td valign="top" width="55">※ 붙임.</td>
+                  <td valign="top" width="20">1.</td>
+                  <td valign="top">문학경기장 대관 사용 견적서 1부</td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td valign="top">2.</td>
+                  <td valign="top">문학경기장 대관 허가조건 및 유의사항 1부</td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td valign="top">3.</td>
+                  <td valign="top">사업자등록증 사본 1부</td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td valign="top">4.</td>
+                  <td valign="top">통장사본 1부.&nbsp;&nbsp;&nbsp;끝.</td>
+                </tr>
+              </table>
 
-              <div style={{ marginTop: '40px', textAlign: 'center' }}>
-                <p style={{ margin: 0, padding: 0, fontSize: '16pt', fontWeight: 'bold', msoLineHeightRule: 'exactly', lineHeight: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif" }}>주식회사 신세계야구단 대표이사</p>
+              {/* 6. 직인 / 발송인 */}
+              <div style={{ marginTop: '60px', textAlign: 'center' }}>
+                <p style={{ margin: 0, padding: 0, fontSize: '20pt', fontWeight: 'bold', letterSpacing: '2px' }}>주식회사 신세계야구단 대표이사</p>
               </div>
             </div>
           </div>
         );
       };
 
-      // --- 견적서 (Excel) 데이터 행 렌더러 (콤마, 10원 단위 미만 절사 라벨 적용, 얇은 테두리 1px) ---
       const renderExcelRow = (name, unitText, qtyText, amount, note, isSubtotal = false) => {
         const displayAmount = amount === 0 ? '0' : formatCurrency(amount);
         const displayQty = qtyText || '-';
@@ -720,7 +778,6 @@
         );
       };
 
-      // --- 견적서 (Excel) 렌더러 (로고 없음, B/F/G 병합 해제 및 5열 구조 완벽 동기화) ---
       const renderExcelTemplate = (r, fees) => {
         return (
           <div id="export-area" style={{ fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif", fontSize: '10pt', color: 'black' }}>
@@ -733,7 +790,6 @@
                 <col width="18%" />
               </colgroup>
               <tbody>
-                {/* 1. 제목 (로고 없이 좌측에서 표 전체 병합 중앙정렬) */}
                 <tr>
                   <td colSpan="5" style={{ fontSize: '24pt', fontWeight: 'bold', padding: '15px 0', textAlign: 'center', border: 'none' }}>
                     문학경기장 사용료 견적서(INVOICE)
@@ -741,7 +797,6 @@
                 </tr>
                 <tr><td colSpan="5" style={{ height: '15px', border: 'none' }}></td></tr>
                 
-                {/* 2. 수신인 / 발행일 박스 (얇은 실선, 회색 음영) */}
                 <tr>
                   <td colSpan="1" style={{ border: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>수 신 인</td>
                   <td colSpan="2" style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{r.recipient} 귀하</td>
@@ -750,7 +805,6 @@
                 </tr>
                 <tr><td colSpan="5" style={{ height: '15px', border: 'none' }}></td></tr>
                 
-                {/* 3. 발행인(공급자) 표 (가로쓰기, 외곽 굵은선 2px, 안쪽 얇은선 1px) */}
                 <tr>
                   <td colSpan="1" rowSpan="3" style={{ borderTop: '2px solid black', borderBottom: '2px solid black', borderLeft: '2px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center', verticalAlign: 'middle' }}>발 행 인 (공급자)</td>
                   <td colSpan="1" style={{ borderTop: '2px solid black', borderBottom: '1px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>등록번호</td>
@@ -770,7 +824,6 @@
                 </tr>
                 <tr><td colSpan="5" style={{ height: '15px', border: 'none' }}></td></tr>
                 
-                {/* 4. 합계 (VAT 포함) : 굵은 테두리 2px 및 텍스트 중앙 정렬 */}
                 <tr>
                   <td colSpan="2" style={{ border: '2px solid black', borderRight: '1px solid black', padding: '12px', fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f2f2f2' }}>합 계 (VAT 포함)</td>
                   <td colSpan="3" style={{ border: '2px solid black', borderLeft: '1px solid black', padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '14pt' }}>
@@ -779,7 +832,6 @@
                 </tr>
                 <tr><td colSpan="5" style={{ height: '10px', border: 'none' }}></td></tr>
                 
-                {/* 5. 항목 리스트 표 헤더 (얇은 테두리 1px) */}
                 <tr style={{ backgroundColor: '#f2f2f2' }}>
                   <th colSpan="1" style={{ border: '1px solid black', padding: '10px' }}>항 목</th>
                   <th colSpan="1" style={{ border: '1px solid black', padding: '10px' }}>단 가</th>
@@ -788,7 +840,6 @@
                   <th colSpan="1" style={{ border: '1px solid black', padding: '10px' }}>비 고</th>
                 </tr>
                 
-                {/* 6. 각 파트별 렌더링 (a, b, c, d 소계 적용) */}
                 {fees.itemsA.map((item, idx) => renderExcelRow(item.name, item.unitText, item.qtyText, item.total, item.note))}
                 {fees.itemsA.length === 0 && renderExcelRow('전용사용료', '-', '-', 0, '')}
                 {renderExcelRow('전용사용료 소계 (a)', '', '', fees.feeA, '', true)}
@@ -805,7 +856,6 @@
                 {fees.itemsD.length === 0 && renderExcelRow('시설복구비', '-', '-', 0, '')}
                 {renderExcelRow('시설복구비 (d)', '', '', fees.feeD, '', true)}
                 
-                {/* 7. 최하단 총 합계 행 (얇은 테두리 1px 적용) */}
                 <tr>
                   <th colSpan="3" style={{ border: '1px solid black', padding: '10px', textAlign: 'center', backgroundColor: '#f2f2f2' }}>총 합 계 (a+b+c+d)</th>
                   <td colSpan="1" style={{ border: '1px solid black', padding: '10px', textAlign: 'right', fontWeight: 'bold', backgroundColor: '#f2f2f2', msoNumberFormat: '\\#\\,\\#\\#0' }}>{formatCurrency(fees.grandTotal)}</td>
@@ -819,13 +869,34 @@
 
       const renderList = (categoryFilter) => {
         const filtered = rentals.filter(r => r.category === categoryFilter);
-        if (filtered.length === 0) return <div className="p-8 text-center text-gray-500">등록된 대관 일정이 없습니다.</div>;
+        if (filtered.length === 0) return <div className="p-8 text-center text-gray-500">등록된 일정이 없습니다.</div>;
 
         return (
           <div className="space-y-4">
             {filtered.map(rental => {
-              const isAlert = checkIsAlert(rental);
               const isSelected = selectedRental?.id === rental.id;
+              
+              // 야구단행사 전용 간소화된 뷰
+              if (categoryFilter === '야구단행사') {
+                return (
+                  <div key={rental.id} className={`p-4 border rounded-xl shadow-sm bg-white transition-all cursor-pointer ${isSelected ? 'ring-2 ring-blue-500 border-blue-500' : 'hover:border-gray-300'}`} onClick={() => setSelectedRental(rental)}>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-lg text-gray-800">{rental.title}</h3>
+                        <span className="text-sm px-2 py-1 bg-blue-100 text-blue-700 rounded-md">야구단행사</span>
+                      </div>
+                      <div className="text-sm text-gray-600 space-y-1">
+                        <p><strong>일시:</strong> {rental.dates.map(d => rental.dateType === '기간' ? `${d.date} ~ ${d.endDate}` : d.date).join(', ')}</p>
+                        <p><strong>장소:</strong> {Array.from(new Set(rental.dates.map(d => d.location))).join(', ')}</p>
+                        {rental.headcount && <p><strong>사용 인원:</strong> {rental.headcount} 명</p>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              // 기존 대관 일정 뷰
+              const isAlert = checkIsAlert(rental);
               return (
                 <div key={rental.id} className={`p-4 border rounded-xl shadow-sm bg-white transition-all cursor-pointer ${isSelected ? 'ring-2 ring-blue-500 border-blue-500' : 'hover:border-gray-300'}`} onClick={() => setSelectedRental(rental)}>
                   <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
@@ -903,31 +974,39 @@
                   <div key={day} className="bg-white min-h-[100px] p-2 flex flex-col border-t border-gray-100">
                     <span className={`text-sm mb-1 ${i%7===0?'text-red-500':i%7===6?'text-blue-500':'text-gray-700'}`}>{day}</span>
                     <div className="flex flex-col gap-1 overflow-y-auto max-h-[80px]">
-                      {dayRentals.map(r => (
-                        <div 
-                          key={r.id} 
-                          title="더블클릭 또는 꾹 누르면 일정이 삭제됩니다."
-                          className={`text-xs px-1.5 py-1 rounded truncate select-none cursor-pointer transition-transform active:scale-95 ${r.category === '프로모션' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'}`}
-                          onDoubleClick={() => handleDelete(r)}
-                          onMouseDown={(e) => startPress(e, r)}
-                          onMouseUp={cancelPress}
-                          onMouseLeave={cancelPress}
-                          onTouchStart={(e) => startPress(e, r)}
-                          onTouchEnd={cancelPress}
-                          onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); return false; }}
-                        >
-                          {r.title}
-                        </div>
-                      ))}
+                      {dayRentals.map(r => {
+                        let badgeClass = 'bg-green-100 text-green-800'; // 기본: 경기장, 공연대관
+                        if (r.category === '프로모션') badgeClass = 'bg-purple-100 text-purple-800';
+                        if (r.category === '야구단행사') badgeClass = 'bg-blue-100 text-blue-800';
+
+                        return (
+                          <div 
+                            key={r.id} 
+                            title="더블클릭 또는 꾹 누르면 수정/삭제 창이 뜹니다."
+                            className={`text-xs px-1.5 py-1 rounded truncate select-none cursor-pointer transition-transform active:scale-95 ${badgeClass}`}
+                            onDoubleClick={() => handleActionClick(r)}
+                            onMouseDown={(e) => startPress(e, r)}
+                            onMouseUp={cancelPress}
+                            onMouseLeave={cancelPress}
+                            onTouchStart={(e) => startPress(e, r)}
+                            onTouchEnd={cancelPress}
+                            onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); return false; }}
+                          >
+                            {r.title}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
               })}
             </div>
-            <p className="text-xs text-gray-500 mt-3">* 캘린더에 등록된 일정을 <strong>더블클릭(PC) 하거나 꾹 누르면(모바일)</strong> 해당 대관 건을 삭제할 수 있습니다.</p>
+            <p className="text-xs text-gray-500 mt-3">* 캘린더에 등록된 일정을 <strong>더블클릭(PC) 하거나 꾹 누르면(모바일)</strong> 일정의 내용을 수정하거나 삭제할 수 있습니다.</p>
           </div>
         );
       };
+
+      const isFormBaseball = formCategory === '야구단행사';
 
       return (
         <div className="min-h-screen pb-20">
@@ -942,7 +1021,7 @@
 
           <div className="bg-white border-b sticky top-0 z-10 shadow-sm overflow-x-auto whitespace-nowrap">
             <div className="max-w-7xl mx-auto flex">
-              {[{ id: 'register', label: '전체 대관 등록' }, { id: 'promotion', label: '프로모션' }, { id: 'stadium', label: '경기장 대관' }, { id: 'performance', label: '공연 대관' }].map(tab => (
+              {[{ id: 'register', label: '전체 대관 등록' }, { id: 'promotion', label: '프로모션' }, { id: 'stadium', label: '경기장 대관' }, { id: 'performance', label: '공연 대관' }, { id: 'baseball', label: '야구단행사' }].map(tab => (
                 <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSelectedRental(null); }}
                   className={`px-6 md:px-8 py-4 font-semibold text-base md:text-lg transition-colors border-b-4 ${activeTab === tab.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:bg-gray-50'}`}>
                   {tab.label}
@@ -954,9 +1033,15 @@
           <main className="max-w-7xl mx-auto p-6">
             {activeTab === 'register' && (
               <div className="space-y-8 animate-in fade-in duration-300">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                  <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2"><Plus className="w-5 h-5 text-blue-600" /> 신규 대관 등록</h2>
+                <div className={`bg-white rounded-2xl shadow-sm border overflow-hidden ${editModeId ? 'border-amber-300 ring-2 ring-amber-100' : 'border-gray-200'}`}>
+                  <div className={`px-6 py-4 border-b flex justify-between items-center ${editModeId ? 'bg-amber-50' : 'bg-gray-50 border-gray-200'}`}>
+                    <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                      {editModeId ? <Edit className="w-5 h-5 text-amber-600" /> : <Plus className="w-5 h-5 text-blue-600" />}
+                      {editModeId ? '기존 대관 일정 수정 중' : '신규 대관 등록'}
+                    </h2>
+                    {editModeId && (
+                      <span className="text-sm font-semibold text-amber-700 bg-amber-100 px-3 py-1 rounded-full">수정 모드 활성화</span>
+                    )}
                   </div>
                   <form onSubmit={handleRegister} className="p-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -968,18 +1053,21 @@
                               <option value="프로모션">프로모션</option>
                               <option value="경기장 대관">경기장 대관</option>
                               <option value="공연 대관">공연 대관</option>
+                              <option value="야구단행사">야구단행사</option>
                             </select>
                           </div>
-                          <div className="w-48 shrink-0">
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">체육경기 여부</label>
-                            <select className="w-full border-gray-300 border p-2 rounded-lg shadow-sm" value={formPurposeType} onChange={e => setFormPurposeType(e.target.value)}>
-                              <option value="체육경기 외">체육경기 외</option>
-                              <option value="체육경기">체육경기</option>
-                            </select>
-                          </div>
+                          {!isFormBaseball && (
+                            <div className="w-48 shrink-0">
+                              <label className="block text-sm font-semibold text-gray-700 mb-1">체육경기 여부</label>
+                              <select className="w-full border-gray-300 border p-2 rounded-lg shadow-sm" value={formPurposeType} onChange={e => setFormPurposeType(e.target.value)}>
+                                <option value="체육경기 외">체육경기 외</option>
+                                <option value="체육경기">체육경기</option>
+                              </select>
+                            </div>
+                          )}
                           <div className="flex-1 w-full">
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">대관 명 (제목)</label>
-                            <input type="text" required placeholder="예: 스타벅스데이 프로모션 등" className="w-full border-gray-300 border p-2 rounded-lg shadow-sm" value={formTitle} onChange={e => setFormTitle(e.target.value)} />
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">{isFormBaseball ? '행사명 (제목)' : '대관 명 (제목)'}</label>
+                            <input type="text" required placeholder={isFormBaseball ? "예: 야구단 자체 행사" : "예: 스타벅스데이 프로모션 등"} className="w-full border-gray-300 border p-2 rounded-lg shadow-sm" value={formTitle} onChange={e => setFormTitle(e.target.value)} />
                           </div>
                         </div>
                       </div>
@@ -1011,9 +1099,9 @@
                                 {['문학 주육상장', '문학 주축구장', '문학 보조육상장', '문학 보조축구장', '동문광장', '북문광장', '문학 야구장'].map(l => <option key={l} value={l}>{l}</option>)}
                               </select>
                               {(d.location === '동문광장' || d.location === '북문광장') && (
-                                <input type="number" placeholder="면적 (㎡)" className="w-24 border-gray-300 border p-2 rounded-md text-sm" value={d.area} onChange={e => updateDateRow(i, 'area', e.target.value)} required/>
+                                <input type="number" placeholder="면적 (㎡)" className="w-24 border-gray-300 border p-2 rounded-md text-sm" value={d.area} onChange={e => updateDateRow(i, 'area', e.target.value)} required={!isFormBaseball}/>
                               )}
-                              {(formCategory === '경기장 대관' || formCategory === '공연 대관') ? (
+                              {(formCategory === '경기장 대관' || formCategory === '공연 대관' || isFormBaseball) ? (
                                 <select className="border-gray-300 border p-2 rounded-md text-sm" value={d.time} onChange={e => updateDateRow(i, 'time', e.target.value)}>
                                   {['조기 (06:00~09:00)', '주간 (09:00~18:00)', '야간 (18:00~23:00)', '종일 (06:00~23:00)'].map(t => <option key={t} value={t}>{t}</option>)}
                                 </select>
@@ -1028,78 +1116,96 @@
                         </div>
                       </div>
 
-                      {/* --- 상업 사용료, 부속시설 사용료 체크 및 입력란 --- */}
-                      <div className="md:col-span-2 border-t pt-6 grid grid-cols-1 lg:grid-cols-4 gap-4">
-                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                          <label className="flex items-center gap-2 cursor-pointer mb-2">
-                            <input type="checkbox" className="rounded text-blue-600 w-4 h-4" checked={formCommercialUsage} onChange={e => setFormCommercialUsage(e.target.checked)}/>
-                            <span className="font-semibold text-sm text-gray-700">상업 사용료 (1,400원/㎡)</span>
-                          </label>
-                          {formCommercialUsage && (
-                            <input type="number" placeholder="사용 면적(㎡)" className="w-full p-2 text-sm border border-gray-300 rounded" value={formCommercialArea} onChange={e => setFormCommercialArea(e.target.value)}/>
-                          )}
-                        </div>
+                      {/* 야구단행사일 경우 부대비용 및 기타옵션 체크박스 숨김 */}
+                      {!isFormBaseball && (
+                        <div className="md:col-span-2 border-t pt-6 grid grid-cols-1 lg:grid-cols-4 gap-4">
+                          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <label className="flex items-center gap-2 cursor-pointer mb-2">
+                              <input type="checkbox" className="rounded text-blue-600 w-4 h-4" checked={formCommercialUsage} onChange={e => setFormCommercialUsage(e.target.checked)}/>
+                              <span className="font-semibold text-sm text-gray-700">상업 사용료 (1,400원/㎡)</span>
+                            </label>
+                            {formCommercialUsage && (
+                              <input type="number" placeholder="사용 면적(㎡)" className="w-full p-2 text-sm border border-gray-300 rounded" value={formCommercialArea} onChange={e => setFormCommercialArea(e.target.value)}/>
+                            )}
+                          </div>
 
-                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                          <label className="flex items-center gap-2 cursor-pointer mb-2">
-                            <input type="checkbox" className="rounded text-blue-600 w-4 h-4" checked={formFacUsage} onChange={e => setFormFacUsage(e.target.checked)}/>
-                            <span className="font-semibold text-sm text-gray-700">부속시설 사용료 (실/시간)</span>
-                          </label>
-                          {formFacUsage && (
-                            <div className="flex gap-2">
-                              <input type="number" placeholder="실 수" className="w-full p-2 text-sm border border-gray-300 rounded" value={formFacRooms} onChange={e => setFormFacRooms(e.target.value)}/>
-                              <input type="number" placeholder="시간" className="w-full p-2 text-sm border border-gray-300 rounded" value={formFacHours} onChange={e => setFormFacHours(e.target.value)}/>
-                            </div>
-                          )}
-                        </div>
+                          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <label className="flex items-center gap-2 cursor-pointer mb-2">
+                              <input type="checkbox" className="rounded text-blue-600 w-4 h-4" checked={formFacUsage} onChange={e => setFormFacUsage(e.target.checked)}/>
+                              <span className="font-semibold text-sm text-gray-700">부속시설 사용료 (실/시간)</span>
+                            </label>
+                            {formFacUsage && (
+                              <div className="flex gap-2">
+                                <input type="number" placeholder="실 수" className="w-full p-2 text-sm border border-gray-300 rounded" value={formFacRooms} onChange={e => setFormFacRooms(e.target.value)}/>
+                                <input type="number" placeholder="시간" className="w-full p-2 text-sm border border-gray-300 rounded" value={formFacHours} onChange={e => setFormFacHours(e.target.value)}/>
+                              </div>
+                            )}
+                          </div>
 
-                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                          <label className="flex items-center gap-2 cursor-pointer mb-2">
-                            <input type="checkbox" className="rounded text-blue-600 w-4 h-4" checked={formWaterUsage} onChange={e => setFormWaterUsage(e.target.checked)}/>
-                            <span className="font-semibold text-sm text-gray-700">부속시설 (상하수도 요금)</span>
-                          </label>
-                          {formWaterUsage && (
-                            <input type="number" placeholder="금액 직접 입력 (원)" className="w-full p-2 text-sm border border-gray-300 rounded" value={formWaterAmount} onChange={e => setFormWaterAmount(e.target.value)}/>
-                          )}
-                        </div>
+                          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <label className="flex items-center gap-2 cursor-pointer mb-2">
+                              <input type="checkbox" className="rounded text-blue-600 w-4 h-4" checked={formWaterUsage} onChange={e => setFormWaterUsage(e.target.checked)}/>
+                              <span className="font-semibold text-sm text-gray-700">부속시설 (상하수도 요금)</span>
+                            </label>
+                            {formWaterUsage && (
+                              <input type="number" placeholder="금액 직접 입력 (원)" className="w-full p-2 text-sm border border-gray-300 rounded" value={formWaterAmount} onChange={e => setFormWaterAmount(e.target.value)}/>
+                            )}
+                          </div>
 
-                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                          <label className="flex items-center gap-2 cursor-pointer mb-2">
-                            <input type="checkbox" className="rounded text-blue-600 w-4 h-4" checked={formElecUsage} onChange={e => setFormElecUsage(e.target.checked)}/>
-                            <span className="font-semibold text-sm text-gray-700">부속시설 (전기사용료)</span>
-                          </label>
-                          {formElecUsage && (
-                            <input type="number" placeholder="금액 직접 입력 (원)" className="w-full p-2 text-sm border border-gray-300 rounded" value={formElecAmount} onChange={e => setFormElecAmount(e.target.value)}/>
-                          )}
+                          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <label className="flex items-center gap-2 cursor-pointer mb-2">
+                              <input type="checkbox" className="rounded text-blue-600 w-4 h-4" checked={formElecUsage} onChange={e => setFormElecUsage(e.target.checked)}/>
+                              <span className="font-semibold text-sm text-gray-700">부속시설 (전기사용료)</span>
+                            </label>
+                            {formElecUsage && (
+                              <input type="number" placeholder="금액 직접 입력 (원)" className="w-full p-2 text-sm border border-gray-300 rounded" value={formElecAmount} onChange={e => setFormElecAmount(e.target.value)}/>
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )}
 
-                      <div className={`md:col-span-2 border-t pt-6 grid grid-cols-1 gap-6 ${(formCategory === '경기장 대관' || formCategory === '공연 대관') ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
-                        {(formCategory === '경기장 대관' || formCategory === '공연 대관') && (
+                      <div className={`md:col-span-2 border-t pt-6 grid grid-cols-1 gap-6 ${isFormBaseball ? 'sm:grid-cols-1' : (formCategory === '경기장 대관' || formCategory === '공연 대관' ? 'sm:grid-cols-4' : 'sm:grid-cols-3')}`}>
+                        {(formCategory === '경기장 대관' || formCategory === '공연 대관' || isFormBaseball) && (
                           <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-1">사용 인원 (명)</label>
-                            <input type="number" required min="1" placeholder="예: 30" className="w-full border-gray-300 border p-2 rounded-lg shadow-sm" value={formHeadcount} onChange={e => setFormHeadcount(e.target.value)} />
+                            <input type="number" required={!isFormBaseball} min="1" placeholder="예: 30" className="w-full border-gray-300 border p-2 rounded-lg shadow-sm" value={formHeadcount} onChange={e => setFormHeadcount(e.target.value)} />
                           </div>
                         )}
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1">수신자 명</label>
-                          <input type="text" required placeholder="예: 런클리어, 스타벅스 등" className="w-full border-gray-300 border p-2 rounded-lg shadow-sm" value={formRecipient} onChange={e => setFormRecipient(e.target.value)} />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1">입금기한</label>
-                          <input type="date" required className="w-full border-gray-300 border p-2 rounded-lg shadow-sm" value={formPaymentDeadline} onChange={e => setFormPaymentDeadline(e.target.value)} />
-                        </div>
-                        <div className="flex items-center h-full pt-6">
-                          <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg bg-gray-50 w-full">
-                            <input type="checkbox" className="rounded text-blue-600 w-5 h-5" checked={formRestoration} onChange={e => setFormRestoration(e.target.checked)} />
-                            <span className="font-semibold text-gray-700 text-sm whitespace-nowrap">복구비 부과</span>
-                          </label>
-                        </div>
+                        {!isFormBaseball && (
+                          <React.Fragment>
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-1">수신자 명</label>
+                              <input type="text" required placeholder="예: 런클리어, 스타벅스 등" className="w-full border-gray-300 border p-2 rounded-lg shadow-sm" value={formRecipient} onChange={e => setFormRecipient(e.target.value)} />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-1">입금기한</label>
+                              <input type="date" required className="w-full border-gray-300 border p-2 rounded-lg shadow-sm" value={formPaymentDeadline} onChange={e => setFormPaymentDeadline(e.target.value)} />
+                            </div>
+                            <div className="flex flex-col justify-end h-full">
+                              <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg bg-gray-50 w-full hover:bg-gray-100 transition-colors">
+                                <input type="checkbox" className="rounded text-blue-600 w-5 h-5" checked={formRestoration} onChange={e => setFormRestoration(e.target.checked)} />
+                                <span className="font-semibold text-gray-700 text-sm whitespace-nowrap">시설복구비 부과</span>
+                              </label>
+                              {formRestoration && (
+                                <div className="mt-2">
+                                  <input type="number" required placeholder="회당 금액 직접입력 (원)" className="w-full border-gray-300 border p-2 rounded-lg shadow-sm text-sm" value={formRestorationAmount} onChange={e => setFormRestorationAmount(e.target.value)} />
+                                </div>
+                              )}
+                            </div>
+                          </React.Fragment>
+                        )}
                       </div>
 
                     </div>
-                    <div className="pt-4 flex justify-end">
-                      <button type="submit" className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold text-lg hover:bg-blue-700">대관 일정 등록하기</button>
+                    <div className="pt-4 flex justify-end gap-3 border-t mt-4">
+                      {editModeId && (
+                        <button type="button" onClick={resetForm} className="bg-gray-200 text-gray-800 px-6 py-3 rounded-xl font-bold text-lg hover:bg-gray-300">
+                          수정 취소
+                        </button>
+                      )}
+                      <button type="submit" className={`${editModeId ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-600 hover:bg-blue-700'} text-white px-8 py-3 rounded-xl font-bold text-lg`}>
+                        {editModeId ? '수정 내용 저장하기' : '대관 일정 등록하기'}
+                      </button>
                     </div>
                   </form>
                 </div>
@@ -1107,26 +1213,59 @@
               </div>
             )}
 
-            {(activeTab === 'promotion' || activeTab === 'stadium' || activeTab === 'performance') && (
+            {(activeTab === 'promotion' || activeTab === 'stadium' || activeTab === 'performance' || activeTab === 'baseball') && (
               <div className="space-y-6 animate-in fade-in duration-300">
                 <div className="flex justify-between items-end bg-white p-4 rounded-xl shadow-sm border">
                   <div>
                     <h2 className="text-xl font-black text-gray-800">
-                      {activeTab === 'promotion' ? '프로모션 대관 목록' : activeTab === 'stadium' ? '경기장 대관 목록' : '공연 대관 목록'}
+                      {activeTab === 'promotion' ? '프로모션 대관 목록' : activeTab === 'stadium' ? '경기장 대관 목록' : activeTab === 'performance' ? '공연 대관 목록' : '야구단행사 목록'}
                     </h2>
-                    <p className="text-sm text-gray-500 mt-1">대관 건을 클릭하여 선택한 후, 우측의 문서 작성 버튼을 이용하세요.</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {activeTab === 'baseball' ? '야구단 자체 행사 및 일정이 간소화되어 표시됩니다.' : '대관 건을 클릭하여 선택한 후, 우측의 문서 작성 버튼을 이용하세요.'}
+                    </p>
                   </div>
-                  <div className="flex gap-3">
-                    <button onClick={() => openDoc('word')} className="flex items-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 px-4 py-2 rounded-lg font-semibold hover:bg-blue-100"><FileText className="w-5 h-5" /> 공문 작성</button>
-                    <button onClick={() => openDoc('excel')} className="flex items-center gap-2 bg-green-50 text-green-700 border border-green-200 px-4 py-2 rounded-lg font-semibold hover:bg-green-100"><FileSpreadsheet className="w-5 h-5" /> 견적서 작성</button>
-                  </div>
+                  
+                  {activeTab !== 'baseball' && (
+                    <div className="flex gap-3">
+                      <button onClick={() => openDoc('word')} className="flex items-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 px-4 py-2 rounded-lg font-semibold hover:bg-blue-100"><FileText className="w-5 h-5" /> 공문 작성</button>
+                      <button onClick={() => openDoc('excel')} className="flex items-center gap-2 bg-green-50 text-green-700 border border-green-200 px-4 py-2 rounded-lg font-semibold hover:bg-green-100"><FileSpreadsheet className="w-5 h-5" /> 견적서 작성</button>
+                    </div>
+                  )}
                 </div>
-                {renderList(activeTab === 'promotion' ? '프로모션' : activeTab === 'stadium' ? '경기장 대관' : '공연 대관')}
+                {renderList(activeTab === 'promotion' ? '프로모션' : activeTab === 'stadium' ? '경기장 대관' : activeTab === 'performance' ? '공연 대관' : '야구단행사')}
               </div>
             )}
           </main>
 
-          {/* 모달 창 */}
+          {/* 일정 관리 (수정/삭제) 액션 모달 */}
+          {actionModal.isOpen && actionModal.rental && (
+            <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={() => setActionModal({ isOpen: false, rental: null })}>
+              <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
+                <div className="p-5 border-b bg-gray-50 flex justify-between items-center">
+                  <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                    <CalendarIcon className="w-5 h-5 text-blue-600" />
+                    일정 관리
+                  </h3>
+                  <button onClick={() => setActionModal({ isOpen: false, rental: null })} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5"/></button>
+                </div>
+                <div className="p-5">
+                  <p className="text-sm text-gray-600 mb-5">
+                    <strong>"{actionModal.rental.title}"</strong> 일정에 대해<br/>원하시는 작업을 선택해주세요.
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    <button onClick={() => handleEdit(actionModal.rental)} className="w-full flex justify-center items-center gap-2 bg-amber-50 text-amber-700 py-3 rounded-xl font-bold hover:bg-amber-100 border border-amber-200 transition-colors">
+                      <Edit className="w-4 h-4"/> 등록 내용 변경 (수정)
+                    </button>
+                    <button onClick={() => { handleDelete(actionModal.rental); setActionModal({ isOpen: false, rental: null }); }} className="w-full flex justify-center items-center gap-2 bg-red-50 text-red-700 py-3 rounded-xl font-bold hover:bg-red-100 border border-red-200 transition-colors">
+                      <Trash2 className="w-4 h-4"/> 일정 완전히 삭제
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 공문/견적서 미리보기 문서 모달 */}
           {docModal.isOpen && docModal.rental && (
             <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
               <div className="bg-gray-100 w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
