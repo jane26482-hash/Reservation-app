@@ -156,12 +156,15 @@
       const mime = type === 'word' ? 'application/msword' : 'application/vnd.ms-excel';
       const officeType = type === 'word' ? 'word' : 'excel';
       
+      // 워드 변환 시 모든 폰트를 '에브리데이고딕 L' 로 통일
+      const fontStyle = type === 'word' ? "'에브리데이고딕 L', sans-serif" : "'Malgun Gothic', '맑은 고딕', sans-serif";
+      
       const preHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:${officeType}' xmlns='http://www.w3.org/TR/REC-html40'>
       <head>
         <meta charset='utf-8'>
         <title>Export</title>
         <style>
-          body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; color: #000; margin: 0; padding: 0; }
+          body { font-family: ${fontStyle}; color: #000; margin: 0; padding: 0; }
           table { border-collapse: collapse; margin: 0; padding: 0; }
           td, th, p, span, div { margin: 0; padding: 0; mso-line-height-rule: exactly; }
           br { mso-data-placement: same-cell; }
@@ -588,16 +591,14 @@
         URL.revokeObjectURL(url);
       };
 
-      // --- [최종 수정 완료] Word 템플릿: 첨부해주신 DOCX 문서 양식과 완벽 일치 ---
+      // --- [최종 수정 완료] Word 템플릿: 폰트 에브리데이고딕 L 및 양식 완벽 일치 ---
       const renderWordTemplate = (r, fees) => {
-        // 날짜 가공
         const dateStr = r.dates.map(d => r.dateType === '기간' ? `${d.date} ~ ${d.endDate}` : d.date).join(', ');
         const locStr = Array.from(new Set(r.dates.map(d => getOfficialLocationName(d.location)))).join(', ');
         const docNumber = String(Math.floor(Math.random() * 100) + 50).padStart(3, '0');
         const currentYear = new Date().getFullYear();
-        const todayExcelStr = getTodayFormatted('excel'); // 2026.00.00. 형식
+        const todayExcelStr = getTodayFormatted('excel');
 
-        // 총 대관일 수 계산
         let totalDays = 0;
         r.dates.forEach(d => {
             if (r.dateType === '기간' && d.endDate) {
@@ -609,7 +610,6 @@
             }
         });
 
-        // 요일이 포함된 마감 날짜 포맷 (예: 2026년 6월 12일(금))
         const formatDateStringWithDay = (dateString) => {
             if(!dateString) return '';
             const d = new Date(dateString);
@@ -620,7 +620,7 @@
         const deadlineStr = formatDateStringWithDay(r.paymentDeadline);
 
         return (
-          <div id="export-area" style={{ width: '100%', fontFamily: "'Malgun Gothic', '맑은 고딕', sans-serif", color: 'black', fontSize: '11pt', lineHeight: '1.6' }}>
+          <div id="export-area" style={{ width: '100%', fontFamily: "'에브리데이고딕 L', sans-serif", color: 'black', fontSize: '11pt', lineHeight: '1.6' }}>
             
             {/* 1. 헤더 (로고 & 발신 정보) */}
             <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ borderCollapse: 'collapse', border: 'none' }}>
@@ -677,16 +677,16 @@
               <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.6' }}>
                 <tr>
                   <td width="20" valign="top">2.</td>
-                  <td valign="top" colSpan="2">관련근거</td>
+                  <td valign="top" colSpan="2">&nbsp;&nbsp;&nbsp;관련근거</td>
                 </tr>
                 <tr>
                   <td width="20"></td>
-                  <td width="30" valign="top">&nbsp;&nbsp;&nbsp;가.</td>
+                  <td width="30" valign="top" align="right">가.&nbsp;</td>
                   <td valign="top">『인천광역시 시립체육시설 관리 운영 조례』 제3조(사용허가), 제16조(사용허가 취소 및 정지)</td>
                 </tr>
                 <tr>
                   <td width="20"></td>
-                  <td width="30" valign="top">&nbsp;&nbsp;&nbsp;나.</td>
+                  <td width="30" valign="top" align="right">나.&nbsp;</td>
                   <td valign="top">문학경기장대관 허가조건 및 유의사항</td>
                 </tr>
               </table>
@@ -703,25 +703,25 @@
               </p>
 
               {/* 가. 사용허가 개요 */}
-              <p style={{ margin: '0 0 5px 0' }}><b>가.&nbsp;사용허가<br/>개요</b></p>
-              <div style={{ paddingLeft: '15px', marginBottom: '15px' }}>
+              <p style={{ margin: '0 0 5px 0' }}>가. 사용허가<br/>개요</p>
+              <div style={{ paddingLeft: '0', marginBottom: '15px' }}>
                 <p style={{ margin: '2px 0' }}>1)사용목적 : {r.title}</p>
                 <p style={{ margin: '2px 0' }}>2)허가기간 : {dateStr}(총{totalDays}일)</p>
                 <p style={{ margin: '2px 0' }}>3)허가장소 : {locStr}</p>
               </div>
 
               {/* 나. 대관료 납부 안내 */}
-              <p style={{ margin: '0 0 5px 0' }}><b>나.&nbsp;대관료 납부 안내</b></p>
-              <div style={{ paddingLeft: '15px', marginBottom: '15px' }}>
+              <p style={{ margin: '0 0 5px 0' }}>나. 대관료 납부 안내</p>
+              <div style={{ paddingLeft: '0', marginBottom: '15px' }}>
                 <p style={{ margin: '2px 0' }}>1)대 관 료 : 금{formatCurrency(fees.grandTotal)}원({numberToKorean(fees.grandTotal)}원, 부가세 포함)</p>
                 <p style={{ margin: '2px 0' }}>2)납부기한 : {deadlineStr} 17:00까지</p>
                 <p style={{ margin: '2px 0' }}>3)납부계좌 : 신한은행 100-029-560532(예금주 : 주식회사 신세계야구단)</p>
-                <p style={{ margin: '2px 0', paddingLeft: '15px' }}>※ 납부기한 내 대관료를 납부하지 않을 경우 사용허가가 취소될 수 있음</p>
+                <p style={{ margin: '2px 0', paddingLeft: '15px', fontSize: '10pt' }}>※ 납부기한 내 대관료를 납부하지 않을 경우 사용허가가 취소될 수 있음</p>
               </div>
 
               {/* 다. 사용허가조건 */}
-              <p style={{ margin: '0 0 5px 0' }}><b>다.&nbsp;사용허가조건</b></p>
-              <div style={{ paddingLeft: '15px', marginBottom: '25px' }}>
+              <p style={{ margin: '0 0 5px 0' }}>다. 사용허가조건</p>
+              <div style={{ paddingLeft: '0', marginBottom: '25px' }}>
                 <p style={{ margin: '2px 0' }}>1)문학경기장 대관 허가조건<br/>및 유의사항을 준수할 것</p>
                 <p style={{ margin: '2px 0' }}>2)행사 종료 후 발생한<br/>쓰레기 수거 및 원상복구 의무를 이행할 것</p>
               </div>
@@ -885,7 +885,6 @@
             {filtered.map(rental => {
               const isSelected = selectedRental?.id === rental.id;
               
-              // 야구단행사 전용 간소화된 뷰
               if (categoryFilter === '야구단행사') {
                 return (
                   <div key={rental.id} className={`p-4 border rounded-xl shadow-sm bg-white transition-all cursor-pointer ${isSelected ? 'ring-2 ring-blue-500 border-blue-500' : 'hover:border-gray-300'}`} onClick={() => setSelectedRental(rental)}>
@@ -904,7 +903,6 @@
                 );
               }
 
-              // 기존 대관 일정 뷰
               const isAlert = checkIsAlert(rental);
               return (
                 <div key={rental.id} className={`p-4 border rounded-xl shadow-sm bg-white transition-all cursor-pointer ${isSelected ? 'ring-2 ring-blue-500 border-blue-500' : 'hover:border-gray-300'}`} onClick={() => setSelectedRental(rental)}>
