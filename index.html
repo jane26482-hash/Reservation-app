@@ -593,6 +593,7 @@
       };
 
       // --- [수정 완료] Word 템플릿: 폰트 에브리데이고딕 L 및 양식 완벽 일치 ---
+      // 주의: style 속성의 객체 문법 오류를 수정했습니다. fontFamily 따옴표 닫기 완료.
       const renderWordTemplate = (r, fees) => {
         const dateStr = r.dates.map(d => r.dateType === '기간' ? `${d.date} ~ ${d.endDate}` : d.date).join(', ');
         const locStr = Array.from(new Set(r.dates.map(d => getOfficialLocationName(d.location)))).join(', ');
@@ -621,7 +622,7 @@
         const deadlineStr = formatDateStringWithDay(r.paymentDeadline);
 
         return (
-          <div id="export-area" style={{ width: '100%', fontFamily: "'에브리데이고딕 L', color: 'black', fontSize: '11pt', lineHeight: '1.6', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
+          <div id="export-area" style={{ width: '100%', fontFamily: "'에브리데이고딕 L', 'Malgun Gothic', sans-serif", color: 'black', fontSize: '11pt', lineHeight: '1.6', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
             
             {/* 1. 헤더 (로고 & 발신 정보) */}
             <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ borderCollapse: 'collapse', border: 'none' }}>
