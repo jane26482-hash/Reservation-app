@@ -648,7 +648,7 @@
                 <tr>
                   <td width="70" align="left" style={{ padding: '3px 0' }}>문서번호</td>
                   <td width="15" align="center">:</td>
-                  <td align="left">SSG랜더스 – 제{currentYear}-{docNumber} 호</td>
+                  <td align="left">SSG랜더스 – 제{currentYear}-{docNumber}&nbsp;&nbsp;&nbsp;호</td>
                   <td align="right" width="120">{todayExcelStr}</td>
                 </tr>
                 <tr>
@@ -662,9 +662,9 @@
                   <td colSpan="2" align="left">㈜신세계야구단</td>
                 </tr>
                 <tr>
-                  <td align="left" style={{ padding: '3px 0' }}>제&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;목</td>
-                  <td align="center">:</td>
-                  <td colSpan="2" align="left"><b>문학경기장 사용허가 신청에 대한 조건부 허가 통보의 건</b></td>
+                  <td align="left" style={{ padding: '3px 0', borderBottom: '1px solid black' }}>제&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;목</td>
+                  <td align="center" style={{ borderBottom: '1px solid black' }}>:</td>
+                  <td colSpan="2" align="left" style={{ borderBottom: '1px solid black' }}>문학경기장 사용허가 신청에 대한 조건부 허가 통보의 건</td>
                 </tr>
               </tbody>
             </table>
@@ -694,7 +694,7 @@
               <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', marginTop: '5px', lineHeight: '1.6' }}>
                 <tr>
                   <td width="20" valign="top">3.</td>
-                  <td valign="top">귀 사에서 신청한 문학경기장 사용허가 요청에 대하여 아래와 같이 조건부로 허가하오니, 행사 진행 시 안전사고 예방과 시설물 보호 및 공유재산 보존에 만전을 기하여 주시기 바랍니다.</td>
+                  <td valign="top">&nbsp;&nbsp;귀 사에서 신청한 문학경기장 사용허가 요청에 대하여 아래와 같이 조건부로 허가하오니, 행사 진행 시 안전사고 예방과 시설물 보호 및 공유재산 보존에 만전을 기하여 주시기 바랍니다.</td>
                 </tr>
               </table>
               
@@ -703,50 +703,44 @@
               </p>
 
               {/* 가. 사용허가 개요 */}
-              <p style={{ margin: '0 0 5px 0' }}>가. 사용허가<br/>개요</p>
+              <p style={{ margin: '0 0 5px 0' }}>가.&nbsp;사용허가<br/>개요</p>
               <div style={{ paddingLeft: '0', marginBottom: '15px' }}>
                 <p style={{ margin: '2px 0' }}>1)사용목적 : {r.title}</p>
                 <p style={{ margin: '2px 0' }}>2)허가기간 : {dateStr}(총{totalDays}일)</p>
                 <p style={{ margin: '2px 0' }}>3)허가장소 : {locStr}</p>
-              </div>
+         
 
               {/* 나. 대관료 납부 안내 */}
-              <p style={{ margin: '0 0 5px 0' }}>나. 대관료 납부 안내</p>
+              <p style={{ margin: '0 0 5px 0' }}>&nbsp;나.&nbsp;대관료 납부 안내</p>
               <div style={{ paddingLeft: '0', marginBottom: '15px' }}>
-                <p style={{ margin: '2px 0' }}>1)대 관 료 : 금{formatCurrency(fees.grandTotal)}원({numberToKorean(fees.grandTotal)}원, 부가세 포함)</p>
-                <p style={{ margin: '2px 0' }}>2)납부기한 : {deadlineStr} 17:00까지</p>
-                <p style={{ margin: '2px 0' }}>3)납부계좌 : 신한은행 100-029-560532(예금주 : 주식회사 신세계야구단)</p>
+                <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;1)대 관 료 : 금{formatCurrency(fees.grandTotal)}원({numberToKorean(fees.grandTotal)}원, 부가세 포함)</p>
+                <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;2)납부기한 : {deadlineStr} 17:00까지</p>
+                <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;3)납부계좌 : 신한은행 100-029-560532(예금주 : 주식회사 신세계야구단)</p>
                 <p style={{ margin: '2px 0', paddingLeft: '15px', fontSize: '10pt' }}>※ 납부기한 내 대관료를 납부하지 않을 경우 사용허가가 취소될 수 있음</p>
-              </div>
+             
 
               {/* 다. 사용허가조건 */}
-              <p style={{ margin: '0 0 5px 0' }}>다. 사용허가조건</p>
+              <p style={{ margin: '0 0 5px 0' }}>&nbsp;다.&nbsp;사용허가조건</p>
               <div style={{ paddingLeft: '0', marginBottom: '25px' }}>
-                <p style={{ margin: '2px 0' }}>1)문학경기장 대관 허가조건<br/>및 유의사항을 준수할 것</p>
-                <p style={{ margin: '2px 0' }}>2)행사 종료 후 발생한<br/>쓰레기 수거 및 원상복구 의무를 이행할 것</p>
-              </div>
-
+                <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;1)문학경기장 대관 허가조건 및 유의사항을 준수할 것</p>
+                <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;2)행사 종료 후 발생한 쓰레기 수거 및 원상복구 의무를 이행할 것</p>
+              
               {/* 5. 첨부 파일 안내 */}
               <table border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.6' }}>
                 <tr>
-                  <td valign="top" width="60">※ 붙임.</td>
-                  <td valign="top" width="20">1.</td>
-                  <td valign="top">문학경기장 대관 사용 견적서 1부</td>
+                  <td valign="top" width="60">※ 붙임.&nbsp;1.&nbsp;문학경기장 대관 사용 견적서 1부</td>
                 </tr>
                 <tr>
                   <td></td>
-                  <td valign="top">2.</td>
-                  <td valign="top">문학경기장 대관 허가조건 및 유의사항 1부</td>
+                  <td valign="top">2.&nbsp;문학경기장 대관 허가조건 및 유의사항 1부</td>
                 </tr>
                 <tr>
                   <td></td>
-                  <td valign="top">3.</td>
-                  <td valign="top">사업자등록증 사본 1부</td>
+                  <td valign="top">3.&nbsp;사업자등록증 사본 1부</td>
                 </tr>
                 <tr>
                   <td></td>
-                  <td valign="top">4.</td>
-                  <td valign="top">통장사본 1부.&nbsp;&nbsp;&nbsp;끝.</td>
+                  <td valign="top">4.&nbsp;통장사본 1부.&nbsp;&nbsp;&nbsp;끝.</td>
                 </tr>
               </table>
 
