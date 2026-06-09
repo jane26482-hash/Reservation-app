@@ -588,7 +588,7 @@
         URL.revokeObjectURL(url);
       };
 
-      // --- [수정 완료] Word 템플릿: 첨부해주신 DOCX 문서 양식과 완벽 일치 ---
+      // --- [최종 수정 완료] Word 템플릿: 첨부해주신 DOCX 문서 양식과 완벽 일치 ---
       const renderWordTemplate = (r, fees) => {
         // 날짜 가공
         const dateStr = r.dates.map(d => r.dateType === '기간' ? `${d.date} ~ ${d.endDate}` : d.date).join(', ');
@@ -669,81 +669,92 @@
               </tbody>
             </table>
 
-            {/* 3. 본문 텍스트 */}
-            <div style={{ marginTop: '25px' }}>
-              <p style={{ margin: '0 0 10px 0', padding: 0 }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. 귀 사의 무궁한 발전을 기원합니다.</p>
+            {/* 3. 본문 텍스트 (양식 완벽 구현) */}
+            <div style={{ marginTop: '25px', fontSize: '11pt', lineHeight: '1.6' }}>
               
-              <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt' }}>
+              <p style={{ margin: '0 0 5px 0' }}>1.&nbsp;&nbsp;귀사의 무궁한 발전을 기원합니다.</p>
+              
+              <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.6' }}>
                 <tr>
-                  <td width="65" valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. 관련근거</p>
-                  <td width="20" valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;가. 『인천광역시 시립체육시설 관리 운영 조례』 제3조(사용허가), 제16조(사용허가 취소 및 정지)</td>
+                  <td width="20" valign="top">2.</td>
+                  <td valign="top" colSpan="2">관련근거</td>
                 </tr>
                 <tr>
-                  <td></td>
-                  <td valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;나. 문학경기장 대관 허가조건 및 유의사항</td>
+                  <td width="20"></td>
+                  <td width="30" valign="top">&nbsp;&nbsp;&nbsp;가.</td>
+                  <td valign="top">『인천광역시 시립체육시설 관리 운영 조례』 제3조(사용허가), 제16조(사용허가 취소 및 정지)</td>
+                </tr>
+                <tr>
+                  <td width="20"></td>
+                  <td width="30" valign="top">&nbsp;&nbsp;&nbsp;나.</td>
+                  <td valign="top">문학경기장대관 허가조건 및 유의사항</td>
                 </tr>
               </table>
 
-              <p style={{ margin: '15px 0 20px 0', padding: 0, lineHeight: '1.6' }}>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. 귀 사에서 신청한 문학경기장 사용허가 요청에 대하여 아래와 같이 조건부로 허가하오니, 행사 진행 시 안전사고 예방과 시설물 보호 및 공유재산 보존에 만전을 기하여 주시기 바랍니다.
-              </p>
+              <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', marginTop: '5px', lineHeight: '1.6' }}>
+                <tr>
+                  <td width="20" valign="top">3.</td>
+                  <td valign="top">귀 사에서 신청한 문학경기장 사용허가 요청에 대하여 아래와 같이 조건부로 허가하오니, 행사 진행 시 안전사고 예방과 시설물 보호 및 공유재산 보존에 만전을 기하여 주시기 바랍니다.</td>
+                </tr>
+              </table>
               
-              <p style={{ margin: '20px 0', textAlign: 'center', fontWeight: 'normal' }}>
-                - 아&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;래 -
+              <p style={{ margin: '20px 0', textAlign: 'center' }}>
+                -&nbsp;&nbsp;&nbsp;&nbsp;아&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;래&nbsp;&nbsp;-
               </p>
 
-              {/* 4. 세부 항목 (1. 2. 3.) */}
-              <div style={{ paddingLeft: '5px' }}>
-                <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;가. 사용허가 개요</p>
-                <div style={{ paddingLeft: '15px', marginBottom: '15px' }}>
-                  <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1) 사용목적 : {r.title}</p>
-                  <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2) 허가기간 : {dateStr}(총{totalDays}일)</p>
-                  <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3) 허가장소 : {locStr}</p>
-                </div>
+              {/* 가. 사용허가 개요 */}
+              <p style={{ margin: '0 0 5px 0' }}><b>가.&nbsp;사용허가<br/>개요</b></p>
+              <div style={{ paddingLeft: '15px', marginBottom: '15px' }}>
+                <p style={{ margin: '2px 0' }}>1)사용목적 : {r.title}</p>
+                <p style={{ margin: '2px 0' }}>2)허가기간 : {dateStr}(총{totalDays}일)</p>
+                <p style={{ margin: '2px 0' }}>3)허가장소 : {locStr}</p>
+              </div>
 
-                <p style={{ margin: '0 0 5px 0' }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;나. 대관료 납부 안내</p>
-                <div style={{ paddingLeft: '15px', marginBottom: '15px' }}>
-                  <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1) 대 관 료 : 금{formatCurrency(fees.grandTotal)}원({numberToKorean(fees.grandTotal)}원, 부가세 포함)</p>
-                  <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2) 납부기한 : {deadlineStr} 17:00까지</p>
-                  <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3) 납부계좌 : 신한은행 100-029-560532(예금주 : 주식회사 신세계야구단)</p>
-                  <p style={{ margin: '3px 0', fontSize: '10.5pt' }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;※ 납부기한 내 대관료를 납부하지 않을 경우 사용허가가 취소될 수 있음</p>
-                </div>
+              {/* 나. 대관료 납부 안내 */}
+              <p style={{ margin: '0 0 5px 0' }}><b>나.&nbsp;대관료 납부 안내</b></p>
+              <div style={{ paddingLeft: '15px', marginBottom: '15px' }}>
+                <p style={{ margin: '2px 0' }}>1)대 관 료 : 금{formatCurrency(fees.grandTotal)}원({numberToKorean(fees.grandTotal)}원, 부가세 포함)</p>
+                <p style={{ margin: '2px 0' }}>2)납부기한 : {deadlineStr} 17:00까지</p>
+                <p style={{ margin: '2px 0' }}>3)납부계좌 : 신한은행 100-029-560532(예금주 : 주식회사 신세계야구단)</p>
+                <p style={{ margin: '2px 0', paddingLeft: '15px' }}>※ 납부기한 내 대관료를 납부하지 않을 경우 사용허가가 취소될 수 있음</p>
+              </div>
 
-                <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;다. 사용허가 조건</p>
-                <div style={{ paddingLeft: '15px', marginBottom: '20px' }}>
-                  <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1) 문학경기장 대관 허가조건 및 유의사항을 준수할 것</p>
-                  <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2) 행사 종료 후 발생한 쓰레기 수거 및 원상복구 의무를 이행할 것</p>
-                </div>
+              {/* 다. 사용허가조건 */}
+              <p style={{ margin: '0 0 5px 0' }}><b>다.&nbsp;사용허가조건</b></p>
+              <div style={{ paddingLeft: '15px', marginBottom: '25px' }}>
+                <p style={{ margin: '2px 0' }}>1)문학경기장 대관 허가조건<br/>및 유의사항을 준수할 것</p>
+                <p style={{ margin: '2px 0' }}>2)행사 종료 후 발생한<br/>쓰레기 수거 및 원상복구 의무를 이행할 것</p>
               </div>
 
               {/* 5. 첨부 파일 안내 */}
-              <table border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', marginTop: '10px' }}>
+              <table border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.6' }}>
                 <tr>
-                  <td valign="top" width="55">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;※ 붙임.</td>
+                  <td valign="top" width="60">※ 붙임.</td>
                   <td valign="top" width="20">1.</td>
                   <td valign="top">문학경기장 대관 사용 견적서 1부</td>
                 </tr>
                 <tr>
                   <td></td>
-                  <td valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.</td>
+                  <td valign="top">2.</td>
                   <td valign="top">문학경기장 대관 허가조건 및 유의사항 1부</td>
                 </tr>
                 <tr>
                   <td></td>
-                  <td valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.</td>
+                  <td valign="top">3.</td>
                   <td valign="top">사업자등록증 사본 1부</td>
                 </tr>
                 <tr>
                   <td></td>
-                  <td valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.</td>
+                  <td valign="top">4.</td>
                   <td valign="top">통장사본 1부.&nbsp;&nbsp;&nbsp;끝.</td>
                 </tr>
               </table>
 
               {/* 6. 직인 / 발송인 */}
-              <div style={{ marginTop: '60px', textAlign: 'center' }}>
-                <p style={{ margin: 0, padding: 0, fontSize: '20pt', fontWeight: 'bold', letterSpacing: '2px' }}>주식회사 신세계야구단 대표이사</p>
+              <div style={{ marginTop: '50px', textAlign: 'center' }}>
+                <p style={{ margin: 0, padding: 0, fontSize: '18pt', fontWeight: 'bold' }}>주식회사 신세계야구단 대표이사</p>
               </div>
+
             </div>
           </div>
         );
