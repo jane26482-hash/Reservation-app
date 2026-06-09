@@ -142,7 +142,7 @@
             try { 
               img.src = getBase64Image(originalImg); 
               if (img.id === 'ssg-logo') {
-                const targetHeight = 80; 
+                const targetHeight = 65; 
                 const ratio = (originalImg.naturalWidth || 150) / (originalImg.naturalHeight || 90);
                 img.setAttribute('height', targetHeight);
                 img.setAttribute('width', Math.round(targetHeight * ratio));
@@ -628,7 +628,7 @@
                 <tr>
                   <td align="center" style={{ padding: 0 }}>
                     <p style={{ margin: 0, padding: 0, textAlign: 'center' }}>
-                      <img id="ssg-logo" src="./wordmark_02.jpg" alt="SSG LANDERS" crossOrigin="anonymous" style={{ height: '75px', objectFit: 'contain' }} />
+                      <img id="ssg-logo" src="./wordmark_02.jpg" alt="SSG LANDERS" crossOrigin="anonymous" style={{ height: '65px', objectFit: 'contain' }} />
                     </p>
                   </td>
                 </tr>
@@ -699,7 +699,7 @@
                         <tbody>
                           <tr>
                             <td width="20" valign="top">가.</td>
-                            <td valign="top">『인천광역시 시립체육시설 관리 운영 조례』제3조<span style={{ fontSize: '10pt' }}>(사용허가)</span>, 제16조<span style={{ fontSize: '10pt' }}>(사용허가 취소 및 정지)</span></td>
+                            <td valign="top">『인천광역시 시립체육시설 관리 운영 조례』<span style={{ fontSize: '10pt' }}>제3조(사용허가)</span>,<span style={{ fontSize: '10pt' }}>제16조(사용허가 취소 및 정지)</span></td>
                           </tr>
                           <tr>
                             <td width="20" valign="top">나.</td>
