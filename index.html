@@ -166,11 +166,13 @@
         <style>
           body { font-family: ${fontStyle}; color: #000; margin: 0; padding: 0; }
           table { border-collapse: collapse; margin: 0; padding: 0; }
-          td, th, p, span, div { margin: 0; padding: 0; mso-line-height-rule: exactly; }
+          td, th, p, span, div { margin: 0pt; padding: 0pt; mso-line-height-rule: exactly; text-align: justify; text-justify: inter-ideograph; word-break: keep-all; }
+          p { margin-top: 0pt !important; margin-bottom: 0pt !important; text-align: justify; text-justify: inter-ideograph; }
           br { mso-data-placement: same-cell; }
         </style>
       </head>
       <body>`;
+      
       const postHtml = "</body></html>";
       
       const html = preHtml + clone.innerHTML + postHtml;
@@ -620,8 +622,8 @@
         const deadlineStr = formatDateStringWithDay(r.paymentDeadline);
 
         return (
-          <div id="export-area" style={{ width: '100%', fontFamily: "'에브리데이고딕 L', 'Malgun Gothic', sans-serif", color: 'black', fontSize: '11pt', lineHeight: '1.6' }}>
-            
+          <div id="export-area" style={{ width: '100%', fontFamily: "'에브리데이고딕 L', color: 'black', fontSize: '11pt', lineHeight: '1.6' }}>
+
             {/* 1. 헤더 (로고 & 발신 정보) */}
             <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ borderCollapse: 'collapse', border: 'none' }}>
               <tbody>
@@ -677,16 +679,14 @@
               <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.6' }}>
                 <tbody>
                   <tr>
-                    <td width="20" valign="top">2.</td>
-                    <td valign="top" colSpan="2">&nbsp;&nbsp;&nbsp;관련근거</td>
+                    <td width="20" valign="top">2.&nbsp;관련근거</td>
                   </tr>
                   <tr>
                     <td width="20"></td>
-                    <td width="30" valign="top" align="center">가.</td>
-                    <td valign="top">『인천광역시 시립체육시설 관리 운영 조례』 제3조(사용허가), 제16조(사용허가 취소 및 정지)</td>
+                    <td width="30" valign="top"  textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>&nbsp;&nbsp;가.&nbsp;『인천광역시 시립체육시설 관리 운영 조례』 제3조(사용허가), 제16조(사용허가 취소 및 정지)</td>
                   </tr>
                   <tr>
-                    <td colSpan="3" valign="top">나. 문학경기장대관 허가조건 및 유의사항</td>
+                    <td colSpan="3" valign="top">&nbsp;&nbsp;나.&nbsp;문학경기장대관 허가조건 및 유의사항</td>
                   </tr>
                 </tbody>
               </table>
@@ -705,27 +705,27 @@
               </p>
 
               {/* 가. 사용허가 개요 */}
-              <p style={{ margin: '0 0 5px 0' }}>가. 사용허가<br/>개요</p>
+              <p style={{ margin: '0 0 5px 0' }}>&nbsp;가. 사용허가<br/>개요</p>
               <div style={{ paddingLeft: '0', marginBottom: '15px' }}>
-                <p style={{ margin: '2px 0' }}>1)사용목적 : {r.title}</p>
-                <p style={{ margin: '2px 0' }}>2)허가기간 : {dateStr}(총{totalDays}일)</p>
-                <p style={{ margin: '2px 0' }}>3)허가장소 : {locStr}</p>
+                <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;1)사용목적 : {r.title}</p>
+                <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;2)허가기간 : {dateStr}(총{totalDays}일)</p>
+                <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;3)허가장소 : {locStr}</p>
               </div>
 
               {/* 나. 대관료 납부 안내 */}
-              <p style={{ margin: '0 0 5px 0' }}>나. 대관료 납부 안내</p>
+              <p style={{ margin: '0 0 5px 0' }}>&nbsp;나. 대관료 납부 안내</p>
               <div style={{ paddingLeft: '0', marginBottom: '15px' }}>
-                <p style={{ margin: '2px 0' }}>1)대 관 료 : 금{formatCurrency(fees.grandTotal)}원({numberToKorean(fees.grandTotal)}원, 부가세 포함)</p>
-                <p style={{ margin: '2px 0' }}>2)납부기한 : {deadlineStr} 17:00까지</p>
-                <p style={{ margin: '2px 0' }}>3)납부계좌 : 신한은행 100-029-560532(예금주 : 주식회사 신세계야구단)</p>
+                <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;1)대 관 료 : 금{formatCurrency(fees.grandTotal)}원({numberToKorean(fees.grandTotal)}원, 부가세 포함)</p>
+                <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;2)납부기한 : {deadlineStr} 17:00까지</p>
+                <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;3)납부계좌 : 신한은행 100-029-560532(예금주 : 주식회사 신세계야구단)</p>
                 <p style={{ margin: '2px 0', fontSize: '10pt' }}>&nbsp;&nbsp;&nbsp;&nbsp;※ 납부기한 내 대관료를 납부하지 않을 경우 사용허가가 취소될 수 있음</p>
               </div>
 
               {/* 다. 사용허가조건 */}
-              <p style={{ margin: '0 0 5px 0' }}>다. 사용허가조건</p>
+              <p style={{ margin: '0 0 5px 0' }}>&nbsp;다. 사용허가조건</p>
               <div style={{ paddingLeft: '0', marginBottom: '25px' }}>
-                <p style={{ margin: '2px 0' }}>1)문학경기장 대관 허가조건<br/>및 유의사항을 준수할 것</p>
-                <p style={{ margin: '2px 0' }}>2)행사 종료 후 발생한<br/>쓰레기 수거 및 원상복구 의무를 이행할 것</p>
+                <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;1)문학경기장 대관 허가조건<br/>및 유의사항을 준수할 것</p>
+                <p style={{ margin: '2px 0' }}>&nbsp;&nbsp;2)행사 종료 후 발생한<br/>쓰레기 수거 및 원상복구 의무를 이행할 것</p>
               </div>
 
               {/* 5. 첨부 파일 안내 */}
