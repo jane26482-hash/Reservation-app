@@ -93,7 +93,7 @@
       return `${yyyy}. ${d.getMonth() + 1}. ${d.getDate()}.`;
     };
 
-    // 한국어 숫자 단위 변환 수정 (만 단위 처리 개선)
+    // 한국어 숫자 단위 변환 (만 단위 처리 개선)
     const numberToKorean = (num) => {
       const numStr = String(Math.round(num));
       const hanA = ["", "일", "이", "삼", "사", "오", "육", "칠", "팔", "구"];
@@ -164,13 +164,14 @@
         <meta charset='utf-8'>
         <title>Export</title>
         <style>
-          /* 워드 전체 여백 설정 (좁은 여백: 상단은 25mm 유지, 좌우하단 12.7mm) */
-          @page { margin: 25.0mm 12.7mm 12.7mm 12.7mm; }
-          @page Section1 { margin: 25.0mm 12.7mm 12.7mm 12.7mm; }
+          /* 워드 전체 여백 설정 (좁은 여백: 상, 하, 좌, 우 모두 12.7mm 통일) */
+          @page { margin: 12.7mm; }
+          @page Section1 { margin: 12.7mm; }
           div.Section1 { page: Section1; }
+          /* mso-line-height-rule 설정을 제거하여 배수(1.15) 줄간격이 정상 적용되도록 함 */
           body { font-family: ${fontStyle}; color: #000; margin: 0; padding: 0; }
           table { border-collapse: collapse; margin: 0; padding: 0; }
-          td, th, p, span, div { margin: 0pt; padding: 0pt; mso-line-height-rule: exactly; text-align: justify; text-justify: inter-ideograph; word-break: keep-all; }
+          td, th, p, span, div { margin: 0pt; padding: 0pt; text-align: justify; text-justify: inter-ideograph; word-break: keep-all; }
           p { margin-top: 0pt !important; margin-bottom: 0pt !important; text-align: justify; text-justify: inter-ideograph; }
           br { mso-data-placement: same-cell; }
         </style>
@@ -642,7 +643,7 @@
         const deadlineStr = formatDateStringWithDay(r.paymentDeadline);
 
         return (
-          <div id="export-area" style={{ width: '100%', fontFamily: "'에브리데이고딕 L', 'Malgun Gothic', sans-serif", color: 'black', fontSize: '11pt', lineHeight: '1.6' }}>
+          <div id="export-area" style={{ width: '100%', fontFamily: "'에브리데이고딕 L', 'Malgun Gothic', sans-serif", color: 'black', fontSize: '11pt', lineHeight: '1.15' }}>
             
             {/* 1. 헤더 (로고 & 발신 정보) */}
             <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ borderCollapse: 'collapse', border: 'none' }}>
@@ -691,9 +692,9 @@
               </tbody>
             </table>
 
-            {/* 3. 본문 텍스트 (완벽한 수직선 들여쓰기를 위한 중첩 Table 구조 적용) */}
+            {/* 3. 본문 텍스트 (줄간격 배수 1.15 적용) */}
             <div style={{ marginTop: '25px' }}>
-              <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.6', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
+              <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.15', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
                 <tbody>
                   {/* 단락 앞 공백 추가 (엔터 1번 효과) */}
                   <tr><td colSpan="3"><p style={{ margin: 0, fontSize: '11pt' }}>&nbsp;</p></td></tr>
@@ -717,7 +718,7 @@
                     <td width="45"></td>
                     <td width="20"></td>
                     <td valign="top">
-                      <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.6', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
+                      <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.15', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
                         <tbody>
                           <tr>
                             <td width="20" valign="top">가.</td>
@@ -756,7 +757,7 @@
                     <td width="45"></td>
                     <td width="20"></td>
                     <td valign="top">
-                      <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.6', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
+                      <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.15', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
                         <tbody>
                           <tr>
                             <td width="20" valign="top">가.</td>
@@ -765,7 +766,7 @@
                           <tr>
                             <td width="20"></td>
                             <td valign="top">
-                              <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.6', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
+                              <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.15', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
                                 <tbody>
                                   <tr><td width="20" valign="top">1)</td><td valign="top">사용목적 : {r.title}</td></tr>
                                   <tr><td width="20" valign="top">2)</td><td valign="top">허가기간 : {dateStrFormatted}(총 {totalDays}일)</td></tr>
@@ -785,7 +786,7 @@
                     <td width="45"></td>
                     <td width="20"></td>
                     <td valign="top">
-                      <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.6', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
+                      <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.15', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
                         <tbody>
                           <tr>
                             <td width="20" valign="top">나.</td>
@@ -794,7 +795,7 @@
                           <tr>
                             <td width="20"></td>
                             <td valign="top">
-                              <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.6', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
+                              <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.15', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
                                 <tbody>
                                   <tr><td width="20" valign="top">1)</td><td valign="top">대 관 료 : 금{formatCurrency(fees.grandTotal)}원({numberToKorean(fees.grandTotal)}원, 부가세 포함)</td></tr>
                                   <tr><td width="20" valign="top">2)</td><td valign="top">납부기한 : {deadlineStr} 17:00까지</td></tr>
@@ -815,7 +816,7 @@
                     <td width="45"></td>
                     <td width="20"></td>
                     <td valign="top">
-                      <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.6', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
+                      <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.15', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
                         <tbody>
                           <tr>
                             <td width="20" valign="top">다.</td>
@@ -824,7 +825,7 @@
                           <tr>
                             <td width="20"></td>
                             <td valign="top">
-                              <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.6', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
+                              <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.15', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
                                 <tbody>
                                   <tr><td width="20" valign="top">1)</td><td valign="top">문학경기장 대관 허가조건 및 유의사항을 준수할 것</td></tr>
                                   <tr><td width="20" valign="top">2)</td><td valign="top">행사 종료 후 발생한 쓰레기 수거 및 원상복구 의무를 이행할 것</td></tr>
@@ -839,16 +840,16 @@
                 </tbody>
               </table>
 
-              {/* 5. 첨부 파일 안내 (수직선 정렬 수정 적용) */}
+              {/* 5. 첨부 파일 안내 */}
               <div style={{ marginTop: '30px' }}>
-                <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.6' }}>
+                <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.15' }}>
                   <tbody>
                     {/* 단락 앞 공백 추가 (엔터 1번 효과) */}
                     <tr><td colSpan="4"><p style={{ margin: 0, fontSize: '11pt' }}>&nbsp;</p></td></tr>
                     
                     <tr>
-                      <td width="45"></td> {/* 1. 과 동일한 45px 들여쓰기 */}
-                      <td valign="top" width="40" style={{ whiteSpace: 'nowrap' }}>※붙임.</td> {/* 20+20=40px 맞춰서 1) 라인에 붙임 */}
+                      <td width="45"></td>
+                      <td valign="top" width="40" style={{ whiteSpace: 'nowrap' }}>※ 붙임.</td> 
                       <td valign="top" width="20">1.</td>
                       <td valign="top">문학경기장 대관 사용 견적서 1부</td>
                     </tr>
@@ -1434,7 +1435,7 @@
 
                 <div className="flex-1 overflow-auto p-8 bg-gray-200">
                   {/* 최상단 여백 25mm 복원, 나머지 12.7mm(좁은여백) 유지 */}
-                  <div className="bg-white mx-auto shadow-sm text-black relative" style={{ width: '210mm', minHeight: '297mm', padding: '25mm 12.7mm 12.7mm 12.7mm', boxSizing: 'border-box' }}>
+                  <div className="bg-white mx-auto shadow-sm text-black relative" style={{ width: '210mm', minHeight: '297mm', padding: '12.7mm', boxSizing: 'border-box' }}>
                     {docModal.type === 'word' 
                       ? renderWordTemplate(docModal.rental, calculateFees(docModal.rental))
                       : renderExcelTemplate(docModal.rental, calculateFees(docModal.rental))
