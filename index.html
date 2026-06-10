@@ -817,31 +817,35 @@
                 </tbody>
               </table>
 
-              {/* 5. 첨부 파일 안내 */}
+              {/* 5. 첨부 파일 안내 (수직선 정렬 수정 적용) */}
               <div style={{ marginTop: '30px' }}>
-                <table border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.6' }}>
+                <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.6' }}>
                   <tbody>
                     {/* 단락 앞 공백 추가 (엔터 1번 효과) */}
-                    <tr><td colSpan="3"><p style={{ margin: 0, fontSize: '11pt' }}>&nbsp;</p></td></tr>
+                    <tr><td colSpan="4"><p style={{ margin: 0, fontSize: '11pt' }}>&nbsp;</p></td></tr>
                     
                     <tr>
-                      <td valign="top" width="60">※ 붙임.</td>
+                      <td width="45"></td> {/* 1. 과 동일한 45px 들여쓰기 */}
+                      <td valign="top" width="65">※ 붙임.</td>
                       <td valign="top" width="20">1.</td>
                       <td valign="top">문학경기장 대관 사용 견적서 1부</td>
                     </tr>
                     <tr>
-                      <td></td>
-                      <td valign="top">2.</td>
+                      <td width="45"></td>
+                      <td width="65"></td>
+                      <td valign="top" width="20">2.</td>
                       <td valign="top">문학경기장 대관 허가조건 및 유의사항 1부</td>
                     </tr>
                     <tr>
-                      <td></td>
-                      <td valign="top">3.</td>
+                      <td width="45"></td>
+                      <td width="65"></td>
+                      <td valign="top" width="20">3.</td>
                       <td valign="top">사업자등록증 사본 1부</td>
                     </tr>
                     <tr>
-                      <td></td>
-                      <td valign="top">4.</td>
+                      <td width="45"></td>
+                      <td width="65"></td>
+                      <td valign="top" width="20">4.</td>
                       <td valign="top">통장사본 1부.&nbsp;&nbsp;&nbsp;끝.</td>
                     </tr>
                   </tbody>
