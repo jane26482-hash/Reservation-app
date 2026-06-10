@@ -93,6 +93,7 @@
       return `${yyyy}. ${d.getMonth() + 1}. ${d.getDate()}.`;
     };
 
+    // 한국어 숫자 단위 변환 수정 (만 단위 처리 개선)
     const numberToKorean = (num) => {
       const numStr = String(Math.round(num));
       const hanA = ["", "일", "이", "삼", "사", "오", "육", "칠", "팔", "구"];
@@ -101,11 +102,11 @@
       let result = "";
       for (let i = 0; i < numStr.length; i++) {
         const str = numStr.substring(numStr.length - 1 - i, numStr.length - i);
-        if (str !== "0") result = hanA[str] + danA[i % 4] + result;
         if (i % 4 === 0) {
           const chunk = numStr.substring(Math.max(0, numStr.length - 1 - i - 3), numStr.length - i);
           if (parseInt(chunk) > 0) result = danG[i / 4] + result;
         }
+        if (str !== "0") result = hanA[str] + danA[i % 4] + result;
       }
       return result || "영";
     };
@@ -720,7 +721,7 @@
                         <tbody>
                           <tr>
                             <td width="20" valign="top">가.</td>
-                            <td valign="top">『인천광역시 시립체육시설 관리 운영 조례』 제3조<span style={{ fontSize: '10pt' }}>(사용허가)</span>,제16조<span style={{ fontSize: '10pt' }}>(사용허가 취소 및 정지)</span></td>
+                            <td valign="top">『인천광역시 시립체육시설 관리 운영 조례』<span style={{ fontSize: '10pt' }}>제3조(사용허가)</span>,<span style={{ fontSize: '10pt' }}> 제16조(사용허가 취소 및 정지)</span></td>
                           </tr>
                           <tr>
                             <td width="20" valign="top">나.</td>
@@ -847,7 +848,7 @@
                     
                     <tr>
                       <td width="45"></td> {/* 1. 과 동일한 45px 들여쓰기 */}
-                      <td valign="top" width="40" style={{ whiteSpace: 'nowrap' }}>※ 붙임.</td> {/* 20+20=40px 맞춰서 1) 라인에 붙임 */}
+                      <td valign="top" width="40" style={{ whiteSpace: 'nowrap' }}>※붙임.</td> {/* 20+20=40px 맞춰서 1) 라인에 붙임 */}
                       <td valign="top" width="20">1.</td>
                       <td valign="top">문학경기장 대관 사용 견적서 1부</td>
                     </tr>
