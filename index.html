@@ -163,6 +163,10 @@
         <meta charset='utf-8'>
         <title>Export</title>
         <style>
+          /* 워드 전체 여백 설정 (좁은 여백: 상단은 25mm 유지, 좌우하단 12.7mm) */
+          @page { margin: 25.0mm 12.7mm 12.7mm 12.7mm; }
+          @page Section1 { margin: 25.0mm 12.7mm 12.7mm 12.7mm; }
+          div.Section1 { page: Section1; }
           body { font-family: ${fontStyle}; color: #000; margin: 0; padding: 0; }
           table { border-collapse: collapse; margin: 0; padding: 0; }
           td, th, p, span, div { margin: 0pt; padding: 0pt; mso-line-height-rule: exactly; text-align: justify; text-justify: inter-ideograph; word-break: keep-all; }
@@ -170,8 +174,8 @@
           br { mso-data-placement: same-cell; }
         </style>
       </head>
-      <body>`;
-      const postHtml = "</body></html>";
+      <body><div class="Section1">`;
+      const postHtml = "</div></body></html>";
       
       const html = preHtml + clone.innerHTML + postHtml;
 
@@ -593,11 +597,28 @@
 
       // --- Word 템플릿 렌더링 ---
       const renderWordTemplate = (r, fees) => {
-        const dateStr = r.dates.map(d => r.dateType === '기간' ? `${d.date} ~ ${d.endDate}` : d.date).join(', ');
+        // 날짜 포맷 (년 월 일)
+        const formatKoreanDate = (dateString) => {
+            if(!dateString) return '';
+            const d = new Date(dateString);
+            if(isNaN(d.getTime())) return dateString;
+            return `${d.getFullYear()}년 ${String(d.getMonth() + 1).padStart(2, '0')}월 ${String(d.getDate()).padStart(2, '0')}일`;
+        };
+
+        const dateStrFormatted = r.dates.map(d => 
+            r.dateType === '기간' && d.endDate 
+            ? `${formatKoreanDate(d.date)} ~ ${formatKoreanDate(d.endDate)}` 
+            : formatKoreanDate(d.date)
+        ).join(', ');
+
         const locStr = Array.from(new Set(r.dates.map(d => getOfficialLocationName(d.location)))).join(', ');
         const docNumber = String(Math.floor(Math.random() * 100) + 50).padStart(3, '0');
         const currentYear = new Date().getFullYear();
-        const todayExcelStr = getTodayFormatted('excel');
+
+        // 2026.00.00 형식 (우측 실선 맞춤용)
+        const pad0 = n => String(n).padStart(2, '0');
+        const todayDate = new Date();
+        const todayDocStr = `${todayDate.getFullYear()}.${pad0(todayDate.getMonth() + 1)}.${pad0(todayDate.getDate())}`;
 
         let totalDays = 0;
         r.dates.forEach(d => {
@@ -649,7 +670,7 @@
                   <td width="70" align="left" style={{ padding: '3px 0' }}>문서번호</td>
                   <td width="15" align="center">:</td>
                   <td align="left">SSG랜더스 – 제{currentYear}-{docNumber}&nbsp;&nbsp;&nbsp;호</td>
-                  <td align="right" width="120">{todayExcelStr}</td>
+                  <td align="right" style={{ padding: 0, textAlign: 'right' }}>{todayDocStr}</td>
                 </tr>
                 <tr>
                   <td align="left" style={{ padding: '3px 0' }}>수&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;신</td>
@@ -680,7 +701,7 @@
                   <tr>
                     <td width="45"></td>
                     <td width="20" valign="top">1.</td>
-                    <td valign="top">귀사의 무궁한 발전을 기원합니다.</td>
+                    <td valign="top">귀 사의 무궁한 발전을 기원합니다.</td>
                   </tr>
                   <tr><td colSpan="3" height="5"></td></tr>
                   
@@ -699,7 +720,7 @@
                         <tbody>
                           <tr>
                             <td width="20" valign="top">가.</td>
-                            <td valign="top">『인천광역시 시립체육시설 관리 운영 조례』<span style={{ fontSize: '10pt' }}>제3조(사용허가)</span>,<span style={{ fontSize: '10pt' }}> 제16조(사용허가 취소 및 정지)</span></td>
+                            <td valign="top">『인천광역시 시립체육시설 관리 운영 조례』 제3조<span style={{ fontSize: '10pt' }}>(사용허가)</span>,제16조<span style={{ fontSize: '10pt' }}>(사용허가 취소 및 정지)</span></td>
                           </tr>
                           <tr>
                             <td width="20" valign="top">나.</td>
@@ -746,7 +767,7 @@
                               <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.6', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
                                 <tbody>
                                   <tr><td width="20" valign="top">1)</td><td valign="top">사용목적 : {r.title}</td></tr>
-                                  <tr><td width="20" valign="top">2)</td><td valign="top">허가기간 : {dateStr}(총{totalDays}일)</td></tr>
+                                  <tr><td width="20" valign="top">2)</td><td valign="top">허가기간 : {dateStrFormatted}(총 {totalDays}일)</td></tr>
                                   <tr><td width="20" valign="top">3)</td><td valign="top">허가장소 : {locStr}</td></tr>
                                 </tbody>
                               </table>
@@ -878,23 +899,23 @@
         
         if (isSubtotal) {
           return (
-            <tr style={{ backgroundColor: '#f2f2f2' }}>
-              <td colSpan="1" style={{ borderTop: '1px solid black', borderBottom: '1px solid black', borderLeft: '1px solid black', borderRight: '1px solid black', padding: '8px', textAlign: 'center', fontWeight: 'bold' }} dangerouslySetInnerHTML={{ __html: name }}></td>
-              <td colSpan="1" style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }}>-</td>
-              <td colSpan="1" style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }}>-</td>
-              <td colSpan="1" style={{ border: '1px solid black', padding: '8px', textAlign: 'right', fontWeight: 'bold', msoNumberFormat: '\\#\\,\\#\\#0' }}>{displayAmount}</td>
-              <td colSpan="1" style={{ borderTop: '1px solid black', borderBottom: '1px solid black', borderLeft: '1px solid black', borderRight: '1px solid black', padding: '8px', textAlign: 'center' }}>10원 미만 절사</td>
+            <tr style={{ backgroundColor: '#f2f2f2', fontSize: '12pt' }}>
+              <td colSpan="1" style={{ borderTop: 'thin solid black', borderBottom: 'thin solid black', borderLeft: 'thin solid black', borderRight: 'thin solid black', padding: '8px', textAlign: 'center', fontWeight: 'bold' }} dangerouslySetInnerHTML={{ __html: name }}></td>
+              <td colSpan="1" style={{ border: 'thin solid black', padding: '8px', textAlign: 'center' }}>-</td>
+              <td colSpan="1" style={{ border: 'thin solid black', padding: '8px', textAlign: 'center' }}>-</td>
+              <td colSpan="1" style={{ border: 'thin solid black', padding: '8px', textAlign: 'right', fontWeight: 'bold', msoNumberFormat: '\\#\\,\\#\\#0' }}>{displayAmount}</td>
+              <td colSpan="1" style={{ borderTop: 'thin solid black', borderBottom: 'thin solid black', borderLeft: 'thin solid black', borderRight: 'thin solid black', padding: '8px', textAlign: 'center' }}>10원 미만 절사</td>
             </tr>
           );
         }
 
         return (
-          <tr>
-            <td colSpan="1" style={{ borderTop: '1px solid black', borderBottom: '1px solid black', borderLeft: '1px solid black', borderRight: '1px solid black', padding: '8px', textAlign: 'left' }} dangerouslySetInnerHTML={{ __html: name }}></td>
-            <td colSpan="1" style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }} dangerouslySetInnerHTML={{ __html: unitText || '-' }}></td>
-            <td colSpan="1" style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }}>{displayQty}</td>
-            <td colSpan="1" style={{ border: '1px solid black', padding: '8px', textAlign: 'right', msoNumberFormat: '\\#\\,\\#\\#0' }}>{displayAmount}</td>
-            <td colSpan="1" style={{ borderTop: '1px solid black', borderBottom: '1px solid black', borderLeft: '1px solid black', borderRight: '1px solid black', padding: '8px', textAlign: 'center' }}>{note}</td>
+          <tr style={{ fontSize: '12pt' }}>
+            <td colSpan="1" style={{ borderTop: 'thin solid black', borderBottom: 'thin solid black', borderLeft: 'thin solid black', borderRight: 'thin solid black', padding: '8px', textAlign: 'left' }} dangerouslySetInnerHTML={{ __html: name }}></td>
+            <td colSpan="1" style={{ border: 'thin solid black', padding: '8px', textAlign: 'center' }} dangerouslySetInnerHTML={{ __html: unitText || '-' }}></td>
+            <td colSpan="1" style={{ border: 'thin solid black', padding: '8px', textAlign: 'center' }}>{displayQty}</td>
+            <td colSpan="1" style={{ border: 'thin solid black', padding: '8px', textAlign: 'right', msoNumberFormat: '\\#\\,\\#\\#0' }}>{displayAmount}</td>
+            <td colSpan="1" style={{ borderTop: 'thin solid black', borderBottom: 'thin solid black', borderLeft: 'thin solid black', borderRight: 'thin solid black', padding: '8px', textAlign: 'center' }}>{note}</td>
           </tr>
         );
       };
@@ -919,46 +940,46 @@
                 <tr><td colSpan="5" style={{ height: '15px', border: 'none' }}></td></tr>
                 
                 <tr>
-                  <td colSpan="1" style={{ border: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>수 신 인</td>
-                  <td colSpan="2" style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{r.recipient} 귀하</td>
-                  <td colSpan="1" style={{ border: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>발 행 일</td>
-                  <td colSpan="1" style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }}>{getTodayFormatted('excel')}</td>
+                  <td colSpan="1" style={{ border: 'thin solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>수 신 인</td>
+                  <td colSpan="2" style={{ border: 'thin solid black', padding: '8px', textAlign: 'left' }}>{r.recipient} 귀하</td>
+                  <td colSpan="1" style={{ border: 'thin solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>발 행 일</td>
+                  <td colSpan="1" style={{ border: 'thin solid black', padding: '8px', textAlign: 'center' }}>{getTodayFormatted('excel')}</td>
                 </tr>
                 <tr><td colSpan="5" style={{ height: '15px', border: 'none' }}></td></tr>
                 
                 <tr>
-                  <td colSpan="1" rowSpan="3" style={{ borderTop: '2px solid black', borderBottom: '2px solid black', borderLeft: '2px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center', verticalAlign: 'middle' }}>발 행 인 (공급자)</td>
-                  <td colSpan="1" style={{ borderTop: '2px solid black', borderBottom: '1px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>등록번호</td>
-                  <td colSpan="1" style={{ borderTop: '2px solid black', borderBottom: '1px solid black', borderRight: '1px solid black', padding: '8px', textAlign: 'center' }}>131-81-54702</td>
-                  <td colSpan="1" style={{ borderTop: '2px solid black', borderBottom: '1px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>상 호</td>
-                  <td colSpan="1" style={{ borderTop: '2px solid black', borderBottom: '1px solid black', borderRight: '2px solid black', padding: '8px', textAlign: 'center' }}>㈜신세계야구단 (대표: 김재섭)</td>
+                  <td colSpan="1" rowSpan="3" style={{ borderTop: 'thin solid black', borderBottom: 'thin solid black', borderLeft: 'thin solid black', borderRight: 'thin solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center', verticalAlign: 'middle' }}>발 행 인 (공급자)</td>
+                  <td colSpan="1" style={{ borderTop: 'thin solid black', borderBottom: 'thin solid black', borderRight: 'thin solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>등록번호</td>
+                  <td colSpan="1" style={{ borderTop: 'thin solid black', borderBottom: 'thin solid black', borderRight: 'thin solid black', padding: '8px', textAlign: 'center' }}>131-81-54702</td>
+                  <td colSpan="1" style={{ borderTop: 'thin solid black', borderBottom: 'thin solid black', borderRight: 'thin solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>상 호</td>
+                  <td colSpan="1" style={{ borderTop: 'thin solid black', borderBottom: 'thin solid black', borderRight: 'thin solid black', padding: '8px', textAlign: 'center' }}>㈜신세계야구단 (대표: 김재섭)</td>
                 </tr>
                 <tr>
-                  <td colSpan="1" style={{ borderBottom: '1px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>사업장주소</td>
-                  <td colSpan="3" style={{ borderBottom: '1px solid black', borderRight: '2px solid black', padding: '8px', textAlign: 'center' }}>인천광역시 미추홀구 매소홀로 618</td>
+                  <td colSpan="1" style={{ borderBottom: 'thin solid black', borderRight: 'thin solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>사업장주소</td>
+                  <td colSpan="3" style={{ borderBottom: 'thin solid black', borderRight: 'thin solid black', padding: '8px', textAlign: 'center' }}>인천광역시 미추홀구 매소홀로 618</td>
                 </tr>
                 <tr>
-                  <td colSpan="1" style={{ borderBottom: '2px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>전 화</td>
-                  <td colSpan="1" style={{ borderBottom: '2px solid black', borderRight: '1px solid black', padding: '8px', textAlign: 'center' }}>032)455-2620</td>
-                  <td colSpan="1" style={{ borderBottom: '2px solid black', borderRight: '1px solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>팩 스</td>
-                  <td colSpan="1" style={{ borderBottom: '2px solid black', borderRight: '2px solid black', padding: '8px', textAlign: 'center' }}>032)455-2699</td>
+                  <td colSpan="1" style={{ borderBottom: 'thin solid black', borderRight: 'thin solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>전 화</td>
+                  <td colSpan="1" style={{ borderBottom: 'thin solid black', borderRight: 'thin solid black', padding: '8px', textAlign: 'center' }}>032)455-2620</td>
+                  <td colSpan="1" style={{ borderBottom: 'thin solid black', borderRight: 'thin solid black', backgroundColor: '#f2f2f2', fontWeight: 'bold', padding: '8px', textAlign: 'center' }}>팩 스</td>
+                  <td colSpan="1" style={{ borderBottom: 'thin solid black', borderRight: 'thin solid black', padding: '8px', textAlign: 'center' }}>032)455-2699</td>
                 </tr>
                 <tr><td colSpan="5" style={{ height: '15px', border: 'none' }}></td></tr>
                 
                 <tr>
-                  <td colSpan="2" style={{ border: '2px solid black', borderRight: '1px solid black', padding: '12px', fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f2f2f2' }}>합 계 (VAT 포함)</td>
-                  <td colSpan="3" style={{ border: '2px solid black', borderLeft: '1px solid black', padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '14pt' }}>
+                  <td colSpan="2" style={{ border: 'thin solid black', borderRight: 'thin solid black', padding: '12px', fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f2f2f2' }}>합 계 (VAT 포함)</td>
+                  <td colSpan="3" style={{ border: 'thin solid black', borderLeft: 'thin solid black', padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '14pt' }}>
                     일금 {numberToKorean(fees.grandTotal)}원 정 (₩{formatCurrency(fees.grandTotal)})
                   </td>
                 </tr>
                 <tr><td colSpan="5" style={{ height: '10px', border: 'none' }}></td></tr>
                 
-                <tr style={{ backgroundColor: '#f2f2f2' }}>
-                  <th colSpan="1" style={{ border: '1px solid black', padding: '10px' }}>항 목</th>
-                  <th colSpan="1" style={{ border: '1px solid black', padding: '10px' }}>단 가</th>
-                  <th colSpan="1" style={{ border: '1px solid black', padding: '10px' }}>수 량</th>
-                  <th colSpan="1" style={{ border: '1px solid black', padding: '10px' }}>금 액 (원)</th>
-                  <th colSpan="1" style={{ border: '1px solid black', padding: '10px' }}>비 고</th>
+                <tr style={{ backgroundColor: '#f2f2f2', fontSize: '12pt' }}>
+                  <th colSpan="1" style={{ border: 'thin solid black', padding: '10px' }}>항 목</th>
+                  <th colSpan="1" style={{ border: 'thin solid black', padding: '10px' }}>단 가</th>
+                  <th colSpan="1" style={{ border: 'thin solid black', padding: '10px' }}>수 량</th>
+                  <th colSpan="1" style={{ border: 'thin solid black', padding: '10px' }}>금 액 (원)</th>
+                  <th colSpan="1" style={{ border: 'thin solid black', padding: '10px' }}>비 고</th>
                 </tr>
                 
                 {fees.itemsA.map((item, idx) => renderExcelRow(item.name, item.unitText, item.qtyText, item.total, item.note))}
@@ -977,10 +998,10 @@
                 {fees.itemsD.length === 0 && renderExcelRow('시설복구비', '-', '-', 0, '')}
                 {renderExcelRow('시설복구비 (d)', '', '', fees.feeD, '', true)}
                 
-                <tr>
-                  <th colSpan="3" style={{ border: '1px solid black', padding: '10px', textAlign: 'center', backgroundColor: '#f2f2f2' }}>총 합 계 (a+b+c+d)</th>
-                  <td colSpan="1" style={{ border: '1px solid black', padding: '10px', textAlign: 'right', fontWeight: 'bold', backgroundColor: '#f2f2f2', msoNumberFormat: '\\#\\,\\#\\#0' }}>{formatCurrency(fees.grandTotal)}</td>
-                  <td colSpan="1" style={{ border: '1px solid black', padding: '10px', backgroundColor: '#f2f2f2' }}></td>
+                <tr style={{ fontSize: '12pt' }}>
+                  <th colSpan="3" style={{ border: 'thin solid black', padding: '10px', textAlign: 'center', backgroundColor: '#f2f2f2' }}>총 합 계 (a+b+c+d)</th>
+                  <td colSpan="1" style={{ border: 'thin solid black', padding: '10px', textAlign: 'right', fontWeight: 'bold', backgroundColor: '#f2f2f2', msoNumberFormat: '\\#\\,\\#\\#0' }}>{formatCurrency(fees.grandTotal)}</td>
+                  <td colSpan="1" style={{ border: 'thin solid black', padding: '10px', backgroundColor: '#f2f2f2' }}></td>
                 </tr>
               </tbody>
             </table>
@@ -1411,7 +1432,8 @@
                 </div>
 
                 <div className="flex-1 overflow-auto p-8 bg-gray-200">
-                  <div className="bg-white mx-auto shadow-sm text-black relative" style={{ width: '210mm', minHeight: '297mm', padding: '25mm', boxSizing: 'border-box' }}>
+                  {/* 최상단 여백 25mm 복원, 나머지 12.7mm(좁은여백) 유지 */}
+                  <div className="bg-white mx-auto shadow-sm text-black relative" style={{ width: '210mm', minHeight: '297mm', padding: '25mm 12.7mm 12.7mm 12.7mm', boxSizing: 'border-box' }}>
                     {docModal.type === 'word' 
                       ? renderWordTemplate(docModal.rental, calculateFees(docModal.rental))
                       : renderExcelTemplate(docModal.rental, calculateFees(docModal.rental))
