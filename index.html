@@ -93,7 +93,6 @@
       return `${yyyy}. ${d.getMonth() + 1}. ${d.getDate()}.`;
     };
 
-    // 한국어 숫자 단위 변환 (만 단위 처리 개선)
     const numberToKorean = (num) => {
       const numStr = String(Math.round(num));
       const hanA = ["", "일", "이", "삼", "사", "오", "육", "칠", "팔", "구"];
@@ -603,6 +602,11 @@
 
       // --- Word 템플릿 렌더링 ---
       const renderWordTemplate = (r, fees) => {
+        const isPromotion = r.category === '프로모션';
+        const docTitle = isPromotion 
+          ? `프로모션(${r.title}) 문학경기장 대관료 납부 요청의 건` 
+          : '문학경기장 사용허가 신청에 대한 조건부 허가 통보의 건';
+
         // 날짜 포맷 (년 월 일)
         const formatKoreanDate = (dateString) => {
             if(!dateString) return '';
@@ -691,7 +695,7 @@
                 <tr>
                   <td align="left" style={{ padding: '3px 0 10px 0', borderBottom: '1px solid black' }}>제&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;목</td>
                   <td align="center" style={{ padding: '3px 0 10px 0', borderBottom: '1px solid black' }}>:</td>
-                  <td colSpan="2" align="left" style={{ padding: '3px 0 10px 0', borderBottom: '1px solid black' }}>문학경기장 사용허가 신청에 대한 조건부 허가 통보의 건</td>
+                  <td colSpan="2" align="left" style={{ padding: '3px 0 10px 0', borderBottom: '1px solid black' }}>{docTitle}</td>
                 </tr>
               </tbody>
             </table>
@@ -738,12 +742,16 @@
                   </tr>
                   <tr><td colSpan="3" height="5"></td></tr>
 
-                  {/* 3. ~ */}
-                  <tr>
-                    <td width="45"></td>
-                    <td width="20" valign="top">3.</td>
-                    <td valign="top">귀 사에서 신청한 문학경기장 사용허가 요청에 대하여 아래와 같이 조건부로 허가하오니, 행사 진행 시 안전사고 예방과 시설물 보호 및 공유재산 보존에 만전을 기하여 주시기 바랍니다.</td>
-                  </tr>
+                  {/* 3. ~ (프로모션이 아닐 때만 렌더링) */}
+                  {!isPromotion && (
+                    <React.Fragment>
+                      <tr>
+                        <td width="45"></td>
+                        <td width="20" valign="top">3.</td>
+                        <td valign="top">귀 사에서 신청한 문학경기장 사용허가 요청에 대하여 아래와 같이 조건부로 허가하오니, 행사 진행 시 안전사고 예방과 시설물 보호 및 공유재산 보존에 만전을 기하여 주시기 바랍니다.</td>
+                      </tr>
+                    </React.Fragment>
+                  )}
 
                   {/* 한 단 띄우기 */}
                   <tr><td colSpan="3" height="30"></td></tr>
@@ -815,67 +823,95 @@
                   </tr>
                   <tr><td colSpan="3" height="15"></td></tr>
 
-                  {/* 다. 사용허가조건 */}
-                  <tr>
-                    <td width="45"></td>
-                    <td width="20"></td>
-                    <td valign="top">
-                      <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.15', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
-                        <tbody>
-                          <tr>
-                            <td width="20" valign="top">다.</td>
-                            <td valign="top">사용허가조건</td>
-                          </tr>
-                          <tr>
-                            <td width="20"></td>
-                            <td valign="top">
-                              <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.15', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
-                                <tbody>
-                                  <tr><td width="20" valign="top">1)</td><td valign="top">문학경기장 대관 허가조건 및 유의사항을 준수할 것</td></tr>
-                                  <tr><td width="20" valign="top">2)</td><td valign="top">행사 종료 후 발생한 쓰레기 수거 및 원상복구 의무를 이행할 것</td></tr>
-                                </tbody>
-                              </table>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </td>
-                  </tr>
+                  {/* 다. 사용허가조건 (프로모션이 아닐 때만 렌더링) */}
+                  {!isPromotion && (
+                    <tr>
+                      <td width="45"></td>
+                      <td width="20"></td>
+                      <td valign="top">
+                        <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.15', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
+                          <tbody>
+                            <tr>
+                              <td width="20" valign="top">다.</td>
+                              <td valign="top">사용허가조건</td>
+                            </tr>
+                            <tr>
+                              <td width="20"></td>
+                              <td valign="top">
+                                <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.15', textAlign: 'justify', textJustify: 'inter-ideograph', wordBreak: 'keep-all' }}>
+                                  <tbody>
+                                    <tr><td width="20" valign="top">1)</td><td valign="top">문학경기장 대관 허가조건 및 유의사항을 준수할 것</td></tr>
+                                    <tr><td width="20" valign="top">2)</td><td valign="top">행사 종료 후 발생한 쓰레기 수거 및 원상복구 의무를 이행할 것</td></tr>
+                                  </tbody>
+                                </table>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
 
               {/* 5. 첨부 파일 안내 */}
               <div style={{ marginTop: '30px' }}>
                 <table width="100%" border="0" cellPadding="0" cellSpacing="0" style={{ fontSize: '11pt', lineHeight: '1.15' }}>
-                  <tbody>
-                    {/* 단락 앞 공백 추가 (엔터 1번 효과) */}
-                    <tr><td colSpan="4"><p style={{ margin: 0, fontSize: '11pt' }}>&nbsp;</p></td></tr>
-                    
-                    <tr>
-                      <td width="45"></td>
-                      <td valign="top" width="40" style={{ whiteSpace: 'nowrap' }}>※붙임.</td> 
-                      <td valign="top" width="20">1.</td>
-                      <td valign="top">문학경기장 대관 사용 견적서 1부</td>
-                    </tr>
-                    <tr>
-                      <td width="45"></td>
-                      <td width="40"></td>
-                      <td valign="top" width="20">2.</td>
-                      <td valign="top">문학경기장 대관 허가조건 및 유의사항 1부</td>
-                    </tr>
-                    <tr>
-                      <td width="45"></td>
-                      <td width="40"></td>
-                      <td valign="top" width="20">3.</td>
-                      <td valign="top">사업자등록증 사본 1부</td>
-                    </tr>
-                    <tr>
-                      <td width="45"></td>
-                      <td width="40"></td>
-                      <td valign="top" width="20">4.</td>
-                      <td valign="top">통장사본 1부.&nbsp;&nbsp;&nbsp;끝.</td>
-                    </tr>
-                  </tbody>
+                  {isPromotion ? (
+                    <tbody>
+                      {/* 단락 앞 공백 추가 (엔터 1번 효과) */}
+                      <tr><td colSpan="4"><p style={{ margin: 0, fontSize: '11pt' }}>&nbsp;</p></td></tr>
+                      
+                      <tr>
+                        <td width="45"></td> {/* 1. 과 동일한 45px 들여쓰기 */}
+                        <td valign="top" width="40" style={{ whiteSpace: 'nowrap' }}>※붙임.</td> {/* 20+20=40px 맞춰서 1) 라인에 붙임 */}
+                        <td valign="top" width="20">1.</td>
+                        <td valign="top">문학경기장 대관 사용 견적서 1부</td>
+                      </tr>
+                      <tr>
+                        <td width="45"></td>
+                        <td width="40"></td>
+                        <td valign="top" width="20">2.</td>
+                        <td valign="top">사업자등록증 사본 1부</td>
+                      </tr>
+                      <tr>
+                        <td width="45"></td>
+                        <td width="40"></td>
+                        <td valign="top" width="20">3.</td>
+                        <td valign="top">통장사본 1부.&nbsp;&nbsp;&nbsp;끝.</td>
+                      </tr>
+                    </tbody>
+                  ) : (
+                    <tbody>
+                      {/* 단락 앞 공백 추가 (엔터 1번 효과) */}
+                      <tr><td colSpan="4"><p style={{ margin: 0, fontSize: '11pt' }}>&nbsp;</p></td></tr>
+                      
+                      <tr>
+                        <td width="45"></td> {/* 1. 과 동일한 45px 들여쓰기 */}
+                        <td valign="top" width="40" style={{ whiteSpace: 'nowrap' }}>※붙임.</td> {/* 20+20=40px 맞춰서 1) 라인에 붙임 */}
+                        <td valign="top" width="20">1.</td>
+                        <td valign="top">문학경기장 대관 사용 견적서 1부</td>
+                      </tr>
+                      <tr>
+                        <td width="45"></td>
+                        <td width="40"></td>
+                        <td valign="top" width="20">2.</td>
+                        <td valign="top">문학경기장 대관 허가조건 및 유의사항 1부</td>
+                      </tr>
+                      <tr>
+                        <td width="45"></td>
+                        <td width="40"></td>
+                        <td valign="top" width="20">3.</td>
+                        <td valign="top">사업자등록증 사본 1부</td>
+                      </tr>
+                      <tr>
+                        <td width="45"></td>
+                        <td width="40"></td>
+                        <td valign="top" width="20">4.</td>
+                        <td valign="top">통장사본 1부.&nbsp;&nbsp;&nbsp;끝.</td>
+                      </tr>
+                    </tbody>
+                  )}
                 </table>
               </div>
 
